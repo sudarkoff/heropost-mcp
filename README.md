@@ -84,53 +84,64 @@ Requires Node 20 or newer.
 ## Authentication
 
 Heropost has no API keys. It uses OpenID Connect at `login.heropost.io`, and every request
-carries a bearer access token. There are two ways to give this server one.
+carries a bearer access token, which you copy out of a signed-in browser session.
 
-### Option 1: a refresh token (recommended)
+> **`heropost-mcp login` does not work, and it isn't your setup.** The identity provider
+> advertises the device-code grant, but the `Heropost.WebFrontend` client is not permitted to
+> use it — tested, and it returns `unauthorized_client`. The command is kept because that
+> could change, and it fails with a clear message rather than a mystery. Until then, the
+> browser-session route below is the only way in.
 
-Access tokens expire within the hour; a refresh token renews them automatically, so you set
-it once.
+### Getting a token
 
-```bash
-HEROPOST_REFRESH_TOKEN=<your refresh token>
-```
+1. Open [app.heropost.io](https://app.heropost.io) and sign in.
+2. DevTools → Application → Local Storage → `https://app.heropost.io`.
+3. Find the key `oidc.user:https://login.heropost.io:Heropost.WebFrontend`.
+4. Its value is JSON. Copy the value of `access_token` — **just that string**, not the
+   surrounding JSON.
 
-To get one, try the built-in device login:
+Access tokens expire within about an hour. The `refresh_token` in that same JSON blob lasts
+longer; if you use it, the server renews access tokens on its own.
 
-```bash
-node dist/index.js login
-```
-
-This prints a URL and a code to approve in your browser, then prints the refresh token to
-paste into your config.
-
-**Caveat, stated honestly:** Heropost's identity provider advertises the device-code grant,
-but whether its public web client is *permitted* to use it is unverified. If the login fails
-with `unauthorized_client`, that route is closed and you'll need Option 2. Please
-[open an issue](https://github.com/sudarkoff/heropost-mcp/issues) if you hit this — knowing
-either way would improve this for everyone.
-
-You can also recover both tokens from a signed-in browser session: open
-[app.heropost.io](https://app.heropost.io), and in DevTools → Application → Local Storage
-find the key `oidc.user:https://login.heropost.io:Heropost.WebFrontend`. Its JSON value
-contains `access_token` and `refresh_token`.
-
-### Option 2: an access token
-
-Simplest, and always works — but it expires, and you'll have to repeat it.
+### Option 1: a token file (recommended)
 
 ```bash
-HEROPOST_ACCESS_TOKEN=<access token from the localStorage entry above>
+install -m 600 /dev/null ~/.config/heropost/access-token
+pbpaste > ~/.config/heropost/access-token     # or paste with an editor
 ```
 
-**Treat both tokens as passwords.** They grant full access to your Heropost account,
-including billing. Keep them out of shell history and version control.
+```bash
+HEROPOST_ACCESS_TOKEN_FILE=/Users/you/.config/heropost/access-token
+```
+
+Better than an environment variable for two reasons: the secret stays out of process listings
+and out of the MCP client config file you might otherwise commit; and **the file is re-read on
+demand**, so when the token expires you paste a new one into the same file and carry on — no
+restart, no config edit.
+
+`HEROPOST_REFRESH_TOKEN_FILE` works the same way for a refresh token.
+
+### Option 2: an environment variable
+
+Fine for a quick trial:
+
+```bash
+HEROPOST_ACCESS_TOKEN=<the access_token string>
+# or, longer-lived:
+HEROPOST_REFRESH_TOKEN=<the refresh_token string>
+```
+
+**Treat both tokens as passwords.** They grant full access to your Heropost account —
+including billing, which lives behind the same login. Keep them out of shell history and
+version control.
 
 ## Configuration
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
-| `HEROPOST_REFRESH_TOKEN` | one of these | Renews access tokens automatically. Preferred. |
+| `HEROPOST_ACCESS_TOKEN_FILE` | one of these | Path to a file holding an access token. Re-read on demand. **Preferred.** |
+| `HEROPOST_REFRESH_TOKEN_FILE` | one of these | Path to a file holding a refresh token. |
+| `HEROPOST_REFRESH_TOKEN` | one of these | Refresh token; access tokens renew automatically. |
 | `HEROPOST_ACCESS_TOKEN` | one of these | A token pasted from a browser session; expires. |
 | `HEROPOST_WORKSPACE_ID` | no | Default workspace, so tools don't need it every call. |
 | `HEROPOST_READ_ONLY` | no | `1` withholds every write tool. |
@@ -145,7 +156,7 @@ including billing. Keep them out of shell history and version control.
 
 ```bash
 claude mcp add heropost \
-  --env HEROPOST_REFRESH_TOKEN=your-token \
+  --env HEROPOST_ACCESS_TOKEN_FILE=/Users/you/.config/heropost/access-token \
   --env HEROPOST_WORKSPACE_ID=123 \
   -- node /absolute/path/to/heropost-mcp/dist/index.js
 ```
@@ -161,7 +172,7 @@ In `claude_desktop_config.json`:
       "command": "node",
       "args": ["/absolute/path/to/heropost-mcp/dist/index.js"],
       "env": {
-        "HEROPOST_REFRESH_TOKEN": "your-token",
+        "HEROPOST_ACCESS_TOKEN_FILE": "/Users/you/.config/heropost/access-token",
         "HEROPOST_WORKSPACE_ID": "123"
       }
     }

@@ -61,9 +61,12 @@ OpenIddict permits grants **per client**. The grants above are what the *identit
 supports; which of them `Heropost.WebFrontend` is actually allowed to use is unknown. In
 particular:
 
-- Whether **device_code** works for this client — this determines if `heropost-mcp login`
-  functions. One request to `/connect/deviceauthorization` answers it: a device code means
-  yes, `unauthorized_client` means no.
+- ~~Whether **device_code** works for this client.~~ **Answered: it does not.** A request to
+  `/connect/deviceauthorization` with `client_id=Heropost.WebFrontend` returns
+  `unauthorized_client` (tested 2026-07-26). So the grant is advertised at the IdP but not
+  enabled for the public web client, and `heropost-mcp login` cannot work until Heropost
+  changes that. This is the concrete evidence that the advertised grant list is *not* the
+  per-client grant list — treat the remaining entries below with the same suspicion.
 - Whether the **password** grant (ROPC) is permitted. Even if it is, it means storing your
   actual Heropost password, which also controls billing through `login-api` — so this
   project does not implement it.

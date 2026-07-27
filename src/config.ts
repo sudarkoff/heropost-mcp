@@ -34,6 +34,14 @@ const boolish = z
 const envSchema = z.object({
   HEROPOST_ACCESS_TOKEN: z.string().min(1).optional(),
   HEROPOST_REFRESH_TOKEN: z.string().min(1).optional(),
+  /**
+   * Read the credential from a file instead of an environment variable. Preferred: env vars
+   * are visible in process listings and tend to get committed inside MCP client configs.
+   * The access-token file is re-read on demand, so replacing an expired token takes effect
+   * without restarting the server.
+   */
+  HEROPOST_ACCESS_TOKEN_FILE: z.string().min(1).optional(),
+  HEROPOST_REFRESH_TOKEN_FILE: z.string().min(1).optional(),
   HEROPOST_CLIENT_ID: z.string().min(1).optional(),
   HEROPOST_CLIENT_SECRET: z.string().min(1).optional(),
   HEROPOST_TOKEN_ENDPOINT: z.string().url().optional(),
@@ -54,6 +62,9 @@ const envSchema = z.object({
 export interface Config {
   accessToken?: string;
   refreshToken?: string;
+  /** Absolute path to a file containing only the access token. Re-read on demand. */
+  accessTokenFile?: string;
+  refreshTokenFile?: string;
   clientId: string;
   clientSecret?: string;
   tokenEndpoint: string;
@@ -95,17 +106,31 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   }
   const e = parsed.data;
 
-  if (!e.HEROPOST_ACCESS_TOKEN && !e.HEROPOST_REFRESH_TOKEN) {
+  const hasCredential =
+    e.HEROPOST_ACCESS_TOKEN ??
+    e.HEROPOST_REFRESH_TOKEN ??
+    e.HEROPOST_ACCESS_TOKEN_FILE ??
+    e.HEROPOST_REFRESH_TOKEN_FILE;
+
+  if (!hasCredential) {
     throw new ConfigError(
-      "No Heropost credential found. Set HEROPOST_ACCESS_TOKEN (an access token copied " +
-        "from a signed-in browser session) or HEROPOST_REFRESH_TOKEN (preferred — it is " +
-        "renewed automatically). See the Authentication section of the README.",
+      "No Heropost credential found. Set one of: HEROPOST_ACCESS_TOKEN_FILE (preferred — a " +
+        "chmod-600 file holding an access token copied from a signed-in browser session; " +
+        "re-read on demand so you can replace an expired token without a restart), " +
+        "HEROPOST_ACCESS_TOKEN, HEROPOST_REFRESH_TOKEN_FILE, or HEROPOST_REFRESH_TOKEN. " +
+        "See the Authentication section of the README.",
     );
   }
 
   return {
     ...(e.HEROPOST_ACCESS_TOKEN ? { accessToken: e.HEROPOST_ACCESS_TOKEN } : {}),
     ...(e.HEROPOST_REFRESH_TOKEN ? { refreshToken: e.HEROPOST_REFRESH_TOKEN } : {}),
+    ...(e.HEROPOST_ACCESS_TOKEN_FILE
+      ? { accessTokenFile: resolve(e.HEROPOST_ACCESS_TOKEN_FILE) }
+      : {}),
+    ...(e.HEROPOST_REFRESH_TOKEN_FILE
+      ? { refreshTokenFile: resolve(e.HEROPOST_REFRESH_TOKEN_FILE) }
+      : {}),
     clientId: e.HEROPOST_CLIENT_ID ?? DEFAULT_CLIENT_ID,
     ...(e.HEROPOST_CLIENT_SECRET ? { clientSecret: e.HEROPOST_CLIENT_SECRET } : {}),
     tokenEndpoint: e.HEROPOST_TOKEN_ENDPOINT ?? DEFAULT_TOKEN_ENDPOINT,

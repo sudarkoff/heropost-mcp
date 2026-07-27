@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import type { Config } from "../config.js";
 import { HeropostAuthError } from "../errors.js";
 
@@ -35,6 +37,66 @@ export class StaticTokenProvider implements TokenProvider {
 
   describe(): string {
     return "static access token (HEROPOST_ACCESS_TOKEN; will expire and cannot self-renew)";
+  }
+}
+
+/**
+ * Reads the access token from a file each time it's needed.
+ *
+ * Preferred over an env var: the secret stays out of process listings and out of MCP client
+ * config files. It also fixes the main annoyance of a pasted token — because the file is
+ * re-read on demand, replacing an expired token takes effect on the next call instead of
+ * requiring a server restart. `canRenew` is true for exactly that reason: an auth failure
+ * makes the client drop its cache and look at the file again.
+ */
+export class FileTokenProvider implements TokenProvider {
+  readonly canRenew = true;
+  private cached?: string;
+
+  constructor(private readonly path: string) {}
+
+  async getAccessToken(): Promise<string> {
+    if (this.cached) return this.cached;
+
+    let contents: string;
+    try {
+      contents = await readFile(this.path, "utf8");
+    } catch (err) {
+      const reason = (err as NodeJS.ErrnoException).code === "ENOENT" ? "not found" : String(err);
+      throw new HeropostAuthError(
+        `Cannot read the Heropost token file at ${this.path} (${reason}). Create it with your ` +
+          `access token as its only contents, readable only by you:\n` +
+          `  install -m 600 /dev/null ${this.path} && pbpaste > ${this.path}`,
+      );
+    }
+
+    // Tolerate a trailing newline and stray whitespace from an editor or a shell redirect.
+    const token = contents.trim();
+    if (!token) {
+      throw new HeropostAuthError(
+        `The Heropost token file at ${this.path} is empty. Paste an access token into it — ` +
+          `see the Authentication section of the README for where to find one.`,
+      );
+    }
+    if (/\s/.test(token)) {
+      throw new HeropostAuthError(
+        `The Heropost token file at ${this.path} contains whitespace, so it does not look ` +
+          `like a bare token. It should hold only the access token — not the surrounding ` +
+          `JSON from localStorage.`,
+      );
+    }
+
+    this.cached = token;
+    return token;
+  }
+
+  invalidate(): void {
+    // Drop the cache so the next call picks up a token that was just replaced on disk.
+    this.cached = undefined;
+  }
+
+  describe(): string {
+    return `access token file ${this.path} (re-read on demand; replace it in place when it expires)`;
   }
 }
 
@@ -149,11 +211,33 @@ export class RefreshTokenProvider implements TokenProvider {
   }
 }
 
+/**
+ * Picks a provider, most capable first: a refresh token can renew indefinitely, a token file
+ * can at least pick up a replacement, and a pasted token can do neither.
+ */
 export function createTokenProvider(config: Config): TokenProvider {
-  if (config.refreshToken) {
-    return new RefreshTokenProvider(config, config.refreshToken, config.accessToken);
+  const refreshToken = config.refreshToken ?? readFileSyncTrimmed(config.refreshTokenFile);
+  if (refreshToken) {
+    return new RefreshTokenProvider(config, refreshToken, config.accessToken);
   }
+  if (config.accessTokenFile) return new FileTokenProvider(config.accessTokenFile);
   if (config.accessToken) return new StaticTokenProvider(config.accessToken);
-  // loadConfig already guarantees one of the two, so this is a programming error.
+  // loadConfig already guarantees a credential, so reaching here is a programming error.
   throw new HeropostAuthError("No Heropost credential configured.");
+}
+
+/**
+ * Refresh tokens are read once at startup, since the provider rotates them in memory from
+ * then on. Read synchronously so provider selection stays a plain function.
+ */
+function readFileSyncTrimmed(path?: string): string | undefined {
+  if (!path) return undefined;
+  try {
+    return readFileSync(path, "utf8").trim() || undefined;
+  } catch {
+    throw new HeropostAuthError(
+      `Cannot read the Heropost refresh-token file at ${path}. Create it containing only the ` +
+        `refresh token, readable only by you.`,
+    );
+  }
 }

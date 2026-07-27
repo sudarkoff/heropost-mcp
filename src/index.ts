@@ -48,17 +48,22 @@ const USAGE = `${SERVER_NAME} ${SERVER_VERSION} — unofficial MCP server for He
 
 Usage:
   heropost-mcp                 Run the MCP server over stdio (how MCP clients start it).
-  heropost-mcp login           Sign in via device code and print a HEROPOST_REFRESH_TOKEN.
+  heropost-mcp login           Device-code sign-in. Heropost does not currently permit this
+                               grant, so expect unauthorized_client; use a token instead.
   heropost-mcp --version
   heropost-mcp --help
 
 Authentication (set one):
-  HEROPOST_REFRESH_TOKEN       Preferred — access tokens are renewed automatically.
-  HEROPOST_ACCESS_TOKEN        A token copied from a signed-in browser session; expires.
+  HEROPOST_ACCESS_TOKEN_FILE   Preferred — a chmod-600 file holding an access token, re-read
+                               on demand so you can replace an expired one without a restart.
+  HEROPOST_REFRESH_TOKEN_FILE  Same, for a refresh token (renews on its own).
+  HEROPOST_REFRESH_TOKEN       Refresh token as an environment variable.
+  HEROPOST_ACCESS_TOKEN        Access token as an environment variable; expires hourly.
 
 Optional:
   HEROPOST_WORKSPACE_ID        Default workspace, so tools don't need it every call.
   HEROPOST_READ_ONLY=1         Withhold every write tool (nothing can be posted or edited).
+  HEROPOST_MEDIA_ROOT          Confine media uploads to one directory tree.
   HEROPOST_TIMEOUT_MS          Per-request timeout; defaults to 30000.
 
 Heropost publishes no API. This project talks to the same private GraphQL services its web
