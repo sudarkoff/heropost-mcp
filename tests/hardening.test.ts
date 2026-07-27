@@ -102,9 +102,18 @@ describe("advancedInput cannot subvert a write", () => {
       { client: h.client },
     );
 
-    const sent = (h.calls[0]!.body as { variables: { customPost: { text: string } } }).variables
+    // Text is set by UpdateCustomPost — CreateCustomPostInput has no text field at all.
+    const update = h.calls.find((c) =>
+      String((c.body as { query?: string }).query ?? "").includes("UpdateCustomPost"),
+    );
+    const sent = (update!.body as { variables: { customPost: { text: string } } }).variables
       .customPost;
     expect(sent.text).toBe("the approved copy");
+    // And the hijack attempt must not have leaked into the create call either.
+    const create = h.calls.find((c) =>
+      String((c.body as { query?: string }).query ?? "").includes("CreateCustomPost"),
+    );
+    expect(JSON.stringify(create!.body)).not.toContain("hijacked");
   });
 
   it("cannot retarget update_post to a different post", async () => {

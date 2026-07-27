@@ -1,24 +1,25 @@
 import { describe, expect, it } from "vitest";
 import { ConfigError, DEFAULT_ENDPOINTS, loadConfig } from "../src/config.js";
+import { NO_CREDENTIALS_FILE } from "./helpers.js";
 
 describe("loadConfig", () => {
   it("requires a credential and says which env vars to set", () => {
-    expect(() => loadConfig({} as NodeJS.ProcessEnv)).toThrow(ConfigError);
-    expect(() => loadConfig({} as NodeJS.ProcessEnv)).toThrow(/HEROPOST_ACCESS_TOKEN/);
-    expect(() => loadConfig({} as NodeJS.ProcessEnv)).toThrow(/HEROPOST_REFRESH_TOKEN/);
+    expect(() => loadConfig({ HEROPOST_CREDENTIALS_FILE: NO_CREDENTIALS_FILE } as NodeJS.ProcessEnv)).toThrow(ConfigError);
+    expect(() => loadConfig({ HEROPOST_CREDENTIALS_FILE: NO_CREDENTIALS_FILE } as NodeJS.ProcessEnv)).toThrow(/HEROPOST_ACCESS_TOKEN/);
+    expect(() => loadConfig({ HEROPOST_CREDENTIALS_FILE: NO_CREDENTIALS_FILE } as NodeJS.ProcessEnv)).toThrow(/HEROPOST_REFRESH_TOKEN/);
   });
 
   it("accepts either credential on its own", () => {
     expect(
-      loadConfig({ HEROPOST_ACCESS_TOKEN: "a" } as NodeJS.ProcessEnv).accessToken,
+      loadConfig({ HEROPOST_ACCESS_TOKEN: "a", HEROPOST_CREDENTIALS_FILE: NO_CREDENTIALS_FILE } as NodeJS.ProcessEnv).accessToken,
     ).toBe("a");
     expect(
-      loadConfig({ HEROPOST_REFRESH_TOKEN: "r" } as NodeJS.ProcessEnv).refreshToken,
+      loadConfig({ HEROPOST_REFRESH_TOKEN: "r", HEROPOST_CREDENTIALS_FILE: NO_CREDENTIALS_FILE } as NodeJS.ProcessEnv).refreshToken,
     ).toBe("r");
   });
 
   it("defaults to the four production endpoints", () => {
-    const config = loadConfig({ HEROPOST_ACCESS_TOKEN: "a" } as NodeJS.ProcessEnv);
+    const config = loadConfig({ HEROPOST_ACCESS_TOKEN: "a", HEROPOST_CREDENTIALS_FILE: NO_CREDENTIALS_FILE } as NodeJS.ProcessEnv);
     expect(config.endpoints).toEqual(DEFAULT_ENDPOINTS);
     expect(config.endpoints.posting).toContain("posting-api.heropost.io");
   });
@@ -50,7 +51,7 @@ describe("loadConfig", () => {
   });
 
   it("is not read-only by default", () => {
-    expect(loadConfig({ HEROPOST_ACCESS_TOKEN: "a" } as NodeJS.ProcessEnv).readOnly).toBe(false);
+    expect(loadConfig({ HEROPOST_ACCESS_TOKEN: "a", HEROPOST_CREDENTIALS_FILE: NO_CREDENTIALS_FILE } as NodeJS.ProcessEnv).readOnly).toBe(false);
   });
 
   it("coerces the default workspace id and rejects nonsense", () => {

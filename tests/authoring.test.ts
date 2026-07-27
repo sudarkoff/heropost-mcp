@@ -60,11 +60,16 @@ describe("heropost_create_post", () => {
       { client: h.client },
     );
 
+    // Create carries only workspaceId + options; text and title arrive via update. That split
+    // is the schema's, not ours — CreateCustomPostInput has no content fields.
     expect((h.calls[0]!.body as { variables: unknown }).variables).toMatchObject({
-      customPost: { workspaceId: 7, text: "Body", title: "Internal label" },
+      customPost: { workspaceId: 7, options: { mode: "TO_ALL", allOption: "TEXT" } },
     });
     expect((h.calls[1]!.body as { variables: unknown }).variables).toMatchObject({
       customPost: { customPostId: 901, accountIds: [11] },
+    });
+    expect((h.calls[2]!.body as { variables: unknown }).variables).toMatchObject({
+      customPost: { customPostId: 901, text: "Body", title: "Internal label" },
     });
   });
 
@@ -80,10 +85,14 @@ describe("heropost_create_post", () => {
       { client: h.client },
     );
 
+    // advancedInput lands on UpdateCustomPost, which is where content fields live —
+    // CreateCustomPostInput accepts only {workspaceId, options}.
+    const update = h.calls.find((c) =>
+      String((c.body as { query?: string }).query ?? "").includes("UpdateCustomPost"),
+    );
     expect(
-      (h.calls[0]!.body as { variables: { customPost: Record<string, unknown> } }).variables
-        .customPost,
-    ).toMatchObject({ workspaceId: 7, postType: "IMAGE" });
+      (update!.body as { variables: { customPost: Record<string, unknown> } }).variables.customPost,
+    ).toMatchObject({ customPostId: 902, postType: "IMAGE" });
   });
 
   it("reports a missing id with the command that fixes the schema", async () => {

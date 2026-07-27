@@ -153,7 +153,34 @@ Other posting operations seen in the bundle: `setScheduledPostToDraft`,
 `scheduleCustomPostItem`, `unselectSocialNetworks`, `unselectAccountForCustomPost`, and an
 `onCustomPostUpdated` subscription.
 
-### The input shapes are the weak point
+### Resolved: the input shapes, and what they corrected
+
+`schema/posting.graphql` is now checked in (introspected with a real token; root types are
+`PostingQuery` / `PostingMutation` / `PostingSubscription`, 86 types). The reconstruction from
+the bundle got the operation names, argument names, and argument types right, but was wrong
+about two input shapes in ways that **validated cleanly and would still have failed at
+runtime** — the reason the payload test below exists:
+
+| Reconstructed | Actual |
+| --- | --- |
+| `CreateCustomPostInput {workspaceId, text, title}` | `{workspaceId!, options: CreateCustomPostOptionsInput}` — **no content fields**; `options.mode` is required (`TO_ALL`, `TO_POSTING_GROUP`, `TO_SOCIAL_NETWORK`, `AS_LAST`) |
+| `UploadPostMediaInput {customPostId, mediaId, url, mediaType}` | same **plus a required `index`** ordering media on the post |
+
+Confirmed correct: `SelectAccountsForCustomPostInput {customPostId, accountIds}`,
+`UpdateCustomPostInput {customPostId, text, title, firstComment, scheduledDate, url}`,
+`GetPreSignedMediaUploadUrlInput {fileName, contentType}`, `SetScheduledPostToDraftInput
+{customPostId}`, and the `UploadMediaInput` enums (`MediaSourceEnum.DIRECT_UPLOAD`,
+`MediaPurposeEnum.POSTING`).
+
+So content flows: `createCustomPost` makes an empty shell, `updateCustomPost` puts the words in.
+
+**GraphQL validation cannot catch either mistake**, because it never inspects runtime variable
+values. `tests/payloads.test.ts` closes that gap: it runs every tool against a stubbed
+transport, captures the actual variables, and coerces them against the declared input types
+from the SDL. It has its own tests proving it fails on a missing required field and an unknown
+one — a checker nobody has seen fail is not evidence of anything.
+
+### Historical note: why the shapes had to be guessed at first
 
 `CreateCustomPostInput`, `UpdateCustomPostInput`, `UploadMediaInput`, `UploadPostMediaInput`,
 `GetPreSignedMediaUploadUrlInput`, `SelectAccountsForCustomPostInput`, and

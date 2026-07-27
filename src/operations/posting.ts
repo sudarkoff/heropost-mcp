@@ -1,23 +1,21 @@
 import { op } from "./types.js";
 
 /**
- * ⚠️ PROVISIONAL — the posting service gates introspection behind auth.
+ * Operations on the `posting` service, validated against `schema/posting.graphql`.
  *
- * Every document below was lifted verbatim from the Heropost web bundle, so the operation
- * names, argument names, and argument *types* are accurate. What is NOT yet verified is
- * the field-level shape of the input objects (`CreateCustomPostInput` and friends), which
- * was reconstructed from minified call sites and is certainly missing optional and
- * per-network fields.
+ * These were originally reconstructed from the minified web bundle, because the posting
+ * service requires a token even to introspect. Once a token was available the real SDL was
+ * checked in — and it corrected two things worth remembering, since both produced documents
+ * that validated cleanly while still being wrong at runtime:
  *
- * Two deliberate consequences:
+ *  - `CreateCustomPostInput` is only `{workspaceId, options: {mode!, allOption, …}}`. It has
+ *    **no text or title field** — content arrives via `updateCustomPost` — and `mode` is
+ *    required.
+ *  - `UploadPostMediaInput` requires `index`, which orders media on the post.
  *
- *  1. Mutations here select only `{ id }`. Reading a post back goes through the
- *     schema-verified `GetPost` on the `main` service instead. That keeps the unverified
- *     surface as small as it can be, so a wrong guess about a *response* field can't
- *     break a write that already succeeded.
- *  2. `npm run introspect -- posting --token <token>` writes `schema/posting.graphql`,
- *     after which the conformance test validates all of this automatically. Until then
- *     the test reports these as unverified rather than silently passing.
+ * Mutations here still select only `{ id }`, with reads going through `GetPost` on the `main`
+ * service. That was a hedge while the schema was unknown; it stays because it keeps these
+ * documents stable against response-shape changes in a private API.
  *
  * See docs/api-notes.md.
  */

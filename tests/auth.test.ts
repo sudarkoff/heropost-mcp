@@ -10,6 +10,7 @@ import {
 } from "../src/auth/provider.js";
 import { ConfigError, loadConfig } from "../src/config.js";
 import { HeropostAuthError } from "../src/errors.js";
+import { NO_CREDENTIALS_FILE } from "./helpers.js";
 
 async function tokenFile(contents: string, name = "token"): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), "heropost-token-"));
@@ -21,21 +22,17 @@ async function tokenFile(contents: string, name = "token"): Promise<string> {
 
 describe("credential configuration", () => {
   it("accepts a token file as a credential", () => {
-    const config = loadConfig({
-      HEROPOST_ACCESS_TOKEN_FILE: "/tmp/whatever",
-    } as NodeJS.ProcessEnv);
+    const config = loadConfig({ HEROPOST_ACCESS_TOKEN_FILE: "/tmp/whatever", HEROPOST_CREDENTIALS_FILE: NO_CREDENTIALS_FILE } as NodeJS.ProcessEnv);
     expect(config.accessTokenFile).toBe("/tmp/whatever");
   });
 
   it("still refuses to start with no credential at all, naming the file option first", () => {
-    expect(() => loadConfig({} as NodeJS.ProcessEnv)).toThrow(ConfigError);
-    expect(() => loadConfig({} as NodeJS.ProcessEnv)).toThrow(/HEROPOST_ACCESS_TOKEN_FILE/);
+    expect(() => loadConfig({ HEROPOST_CREDENTIALS_FILE: NO_CREDENTIALS_FILE } as NodeJS.ProcessEnv)).toThrow(ConfigError);
+    expect(() => loadConfig({ HEROPOST_CREDENTIALS_FILE: NO_CREDENTIALS_FILE } as NodeJS.ProcessEnv)).toThrow(/HEROPOST_ACCESS_TOKEN_FILE/);
   });
 
   it("resolves a relative token-file path to an absolute one", () => {
-    const config = loadConfig({
-      HEROPOST_ACCESS_TOKEN_FILE: "creds/token",
-    } as NodeJS.ProcessEnv);
+    const config = loadConfig({ HEROPOST_ACCESS_TOKEN_FILE: "creds/token", HEROPOST_CREDENTIALS_FILE: NO_CREDENTIALS_FILE } as NodeJS.ProcessEnv);
     expect(config.accessTokenFile?.startsWith("/")).toBe(true);
   });
 });
@@ -44,7 +41,7 @@ describe("provider selection", () => {
   it("prefers a refresh token, which can renew indefinitely", async () => {
     const path = await tokenFile("refresh-abc");
     const provider = createTokenProvider(
-      loadConfig({ HEROPOST_REFRESH_TOKEN_FILE: path } as NodeJS.ProcessEnv),
+      loadConfig({ HEROPOST_REFRESH_TOKEN_FILE: path, HEROPOST_CREDENTIALS_FILE: NO_CREDENTIALS_FILE } as NodeJS.ProcessEnv),
     );
     expect(provider).toBeInstanceOf(RefreshTokenProvider);
   });
@@ -52,10 +49,7 @@ describe("provider selection", () => {
   it("uses the token file over a pasted token, since it can pick up a replacement", async () => {
     const path = await tokenFile("file-token");
     const provider = createTokenProvider(
-      loadConfig({
-        HEROPOST_ACCESS_TOKEN: "env-token",
-        HEROPOST_ACCESS_TOKEN_FILE: path,
-      } as NodeJS.ProcessEnv),
+      loadConfig({ HEROPOST_ACCESS_TOKEN: "env-token", HEROPOST_ACCESS_TOKEN_FILE: path, HEROPOST_CREDENTIALS_FILE: NO_CREDENTIALS_FILE } as NodeJS.ProcessEnv),
     );
     expect(provider).toBeInstanceOf(FileTokenProvider);
     await expect(provider.getAccessToken()).resolves.toBe("file-token");
@@ -63,7 +57,7 @@ describe("provider selection", () => {
 
   it("falls back to a pasted token", () => {
     const provider = createTokenProvider(
-      loadConfig({ HEROPOST_ACCESS_TOKEN: "env-token" } as NodeJS.ProcessEnv),
+      loadConfig({ HEROPOST_ACCESS_TOKEN: "env-token", HEROPOST_CREDENTIALS_FILE: NO_CREDENTIALS_FILE } as NodeJS.ProcessEnv),
     );
     expect(provider).toBeInstanceOf(StaticTokenProvider);
   });
@@ -71,7 +65,7 @@ describe("provider selection", () => {
   it("explains a missing refresh-token file rather than starting broken", () => {
     expect(() =>
       createTokenProvider(
-        loadConfig({ HEROPOST_REFRESH_TOKEN_FILE: "/nope/missing" } as NodeJS.ProcessEnv),
+        loadConfig({ HEROPOST_REFRESH_TOKEN_FILE: "/nope/missing", HEROPOST_CREDENTIALS_FILE: NO_CREDENTIALS_FILE } as NodeJS.ProcessEnv),
       ),
     ).toThrow(/Cannot read the Heropost refresh-token file/);
   });

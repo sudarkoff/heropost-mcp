@@ -242,19 +242,19 @@ To run it without any ability to change anything, add `"HEROPOST_READ_ONLY": "1"
 
 ## Known limitations
 
-- **The authoring tools are built against a partially-verified schema.** Heropost's `posting`
-  service requires a token even to introspect, so the input shapes for `create_post`,
-  `update_post`, and media upload were reconstructed from the web app's own code. They are
-  informed, not authoritative. If a call is rejected for a missing field, every authoring
-  tool takes an `advancedInput` object that is merged into the GraphQL input, so you can work
-  around it without a code change — and then please
+- **Every operation is now validated against real introspected schemas**, including the
+  `posting` service (which requires a token even to introspect). If Heropost still rejects a
+  call for a field this server doesn't model, every authoring tool takes an `advancedInput`
+  object that is merged into the GraphQL input, so you can work around it without a code
+  change — and then please
   [file an issue](https://github.com/sudarkoff/heropost-mcp/issues).
 
-  If you have a token, you can fix this properly for yourself:
+  To refresh the schemas after an upstream change:
 
   ```bash
-  npm run introspect -- posting --token "$HEROPOST_ACCESS_TOKEN"
-  npm test   # now validates the authoring operations too
+  npm run introspect                                    # main + login, no token needed
+  npm run introspect -- posting --token "$TOKEN"        # auth-gated services
+  npm test
   ```
 
 - **Not covered (yet):** RSS automations, the caption and media libraries, watermarks,

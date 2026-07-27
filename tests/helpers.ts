@@ -3,6 +3,13 @@ import { HeropostClient } from "../src/client.js";
 import { StaticTokenProvider } from "../src/auth/provider.js";
 import { loadConfig, type Config } from "../src/config.js";
 
+/**
+ * A path that does not exist, used to keep credential discovery out of the developer's real
+ * ~/.config/heropost/credentials.json. Without this the suite passes or fails depending on
+ * whose machine it runs on.
+ */
+export const NO_CREDENTIALS_FILE = "/nonexistent-heropost-test/credentials.json";
+
 export interface CapturedCall {
   url: string;
   method: string;
@@ -27,6 +34,7 @@ export function harness(env: Record<string, string> = {}): Harness {
   const config = loadConfig({
     HEROPOST_ACCESS_TOKEN: "test-token",
     HEROPOST_WORKSPACE_ID: "7",
+    HEROPOST_CREDENTIALS_FILE: NO_CREDENTIALS_FILE,
     ...env,
   } as NodeJS.ProcessEnv);
 

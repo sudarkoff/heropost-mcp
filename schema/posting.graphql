@@ -1,0 +1,703 @@
+schema {
+  query: PostingQuery
+  mutation: PostingMutation
+  subscription: PostingSubscription
+}
+
+enum AccountCategoryEnum {
+  BOARD
+  CHANNEL
+  GROUP
+  PAGE
+  PROFILE
+}
+
+type AccountDetailType {
+  backgroundImageUrl: String
+  engagementRate: Int!
+  id: Int!
+  numberOfFollowers: Int!
+  numberOfPosts: Int!
+}
+
+type AccountType {
+  accountCategory: AccountCategoryEnum
+  accountDetails: AccountDetailType
+  availabilityState: PostItemAccountAvailabilityStateEnum!
+  createdDate: DateTime!
+  description: String
+  exceptionCode: PostingExceptionCodeEnum
+  exceptionMessage: String
+  extraProperties: DictionaryStringString
+  id: Int!
+  isDeleted: Boolean!
+  isPaused: Boolean!
+  linkToPost: String
+  logoPath: String
+  name: String!
+  pausedReason: String
+  pid: String!
+  profileId: Int!
+  publicationResponseInfo: String
+  publicationState: PostItemAccountPublicationStateEnum!
+  selectedForCalendarView: Boolean!
+  social: SocialEnum
+  url: String
+  userName: String
+  workspace: WorkspaceType
+}
+
+input BoolFilterInput {
+  eq: Boolean
+  ne: Boolean
+}
+
+input CreateCustomPostInput {
+  options: CreateCustomPostOptionsInput
+  workspaceId: Int!
+}
+
+enum CreateCustomPostMode {
+  AS_LAST
+  TO_ALL
+  TO_POSTING_GROUP
+  TO_SOCIAL_NETWORK
+}
+
+enum CreateCustomPostOption {
+  CAROUSEL
+  IMAGE
+  LINK
+  STORY
+  TEXT
+  VIDEO
+}
+
+input CreateCustomPostOptionsInput {
+  allOption: CreateCustomPostOption
+  mode: CreateCustomPostMode!
+  postingGroupId: Int
+  social: SocialEnum
+}
+
+input CustomPostFilterInput {
+  hasPostingFailure: BoolFilterInput
+  id: IntFilterInput
+  postStatus: EnumFilterInputCustomPostStatusEnum
+  postedDate: DateFilterInput
+  scheduledDate: DateFilterInput
+  title: StringFilterInput
+  updatedDate: DateFilterInput
+  workspaceId: IntFilterInput
+}
+
+type CustomPostItemMediaType {
+  customPostItemId: Int!
+  duration: Float
+  fileSize: Long
+  height: Int
+  id: Int!
+  index: Int!
+  isExpired: Boolean!
+  mediaId: Int
+  mediaType: MediaTypeEnum!
+  name: String
+  previewUrl: String
+  thumbUrl: String
+  thumbnailUrl: String
+  url: String
+  width: Int
+}
+
+enum CustomPostItemPublishingStatusEnum {
+  COMPLETED
+  EDITED
+  PENDING
+  SCHEDULED
+}
+
+type CustomPostItemType {
+  accounts: [AccountType]
+  customPostId: Int!
+  enabled: Boolean!
+  extraProperties: DictionaryStringString
+  firstComment: String
+  id: Int!
+  kind: String
+  linkInfo: LinkInfoType
+  location: String
+  media: [CustomPostItemMediaType]
+  publishingStatus: CustomPostItemPublishingStatusEnum!
+  social: SocialEnum!
+  text: String
+  text2: String
+  updatedDate: DateTime!
+  url: String
+  useCommonProperties: Boolean!
+}
+
+type CustomPostMediaType {
+  customPostId: Int!
+  duration: Float
+  fileSize: Long
+  height: Int
+  id: Int!
+  index: Int!
+  isExpired: Boolean!
+  mediaId: Int
+  mediaType: MediaTypeEnum!
+  name: String
+  previewUrl: String
+  thumbUrl: String
+  thumbnailUrl: String
+  url: String
+  width: Int
+}
+
+enum CustomPostRepeatFrequencyEnum {
+  DO_NOT_REPEAT
+  EVERY_1_DAY
+  EVERY_1_MONTH
+  EVERY_1_YEAR
+  EVERY_2_DAY
+  EVERY_2_MONTH
+  EVERY_3_DAY
+  EVERY_3_MONTH
+  EVERY_4_DAY
+  EVERY_4_MONTH
+  EVERY_5_DAY
+  EVERY_6_DAY
+  EVERY_6_MONTH
+  EVERY_7_DAY
+  EVERY_8_DAY
+  EVERY_9_DAY
+  EVERY_10_DAY
+  EVERY_11_DAY
+  EVERY_12_DAY
+  EVERY_13_DAY
+  EVERY_14_DAY
+  EVERY_15_DAY
+  EVERY_16_DAY
+  EVERY_17_DAY
+  EVERY_18_DAY
+  EVERY_19_DAY
+  EVERY_20_DAY
+  EVERY_21_DAY
+  EVERY_22_DAY
+  EVERY_23_DAY
+  EVERY_24_DAY
+  EVERY_25_DAY
+  EVERY_26_DAY
+  EVERY_27_DAY
+  EVERY_28_DAY
+  EVERY_29_DAY
+  EVERY_30_DAY
+  EVERY_31_DAY
+  EVERY_32_DAY
+  EVERY_33_DAY
+  EVERY_34_DAY
+  EVERY_35_DAY
+  EVERY_36_DAY
+  EVERY_37_DAY
+  EVERY_38_DAY
+  EVERY_39_DAY
+  EVERY_40_DAY
+  EVERY_41_DAY
+  EVERY_42_DAY
+  EVERY_43_DAY
+  EVERY_44_DAY
+  EVERY_45_DAY
+  EVERY_46_DAY
+  EVERY_47_DAY
+  EVERY_48_DAY
+  EVERY_49_DAY
+  EVERY_50_DAY
+  EVERY_51_DAY
+  EVERY_52_DAY
+  EVERY_53_DAY
+  EVERY_54_DAY
+  EVERY_55_DAY
+  EVERY_56_DAY
+  EVERY_57_DAY
+  EVERY_58_DAY
+  EVERY_59_DAY
+  EVERY_60_DAY
+}
+
+type CustomPostRepeatSettingsType {
+  customPostId: Int
+  frequency: CustomPostRepeatFrequencyEnum!
+  repeatUntil: DateTime
+}
+
+enum CustomPostStatusEnum {
+  DRAFT
+  IN_PROGRESS
+  PENDING_APPROVAL
+  POSTED
+  SCHEDULED
+}
+
+type CustomPostType {
+  firstComment: String
+  hasPostingFailure: Boolean!
+  id: Int!
+  linkInfo: LinkInfoType
+  media: [CustomPostMediaType]
+  number: Int!
+  postItems: [CustomPostItemType]
+  postStatus: CustomPostStatusEnum!
+  postedDate: DateTime
+  scheduledDate: DateTime
+  showAllTab: Boolean!
+  text: String
+  title: String
+  updatedDate: DateTime!
+  url: String
+  userShouldAcceptPostingError: Boolean!
+  workspaceId: Int!
+}
+
+input DateFilterInput {
+  between: [DateTime!]
+  eq: DateTime
+  ge: DateTime
+  gt: DateTime
+  le: DateTime
+  lt: DateTime
+  ne: DateTime
+}
+
+"""
+The `DateTime` scalar type represents a date and time. `DateTime` expects timestamps to be formatted in accordance with the [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601) standard.
+"""
+scalar DateTime
+
+scalar Decimal
+
+scalar DictionaryStringString
+
+input EnumFilterInputCustomPostStatusEnum {
+  eq: CustomPostStatusEnum
+  in: [CustomPostStatusEnum!]
+  ne: CustomPostStatusEnum
+}
+
+type FacebookLocationType {
+  city: String
+  country: String
+  latitude: Decimal
+  longitude: Decimal
+  street: String
+  zip: String
+}
+
+type FacebookPageType {
+  id: String!
+  location: FacebookLocationType
+  name: String!
+}
+
+type FileInfoType {
+  contentLength: Long!
+  contentType: String!
+}
+
+input GetCustomPostRepeatSettingsInput {
+  customPostId: Int!
+}
+
+input GetCustomPostsScheduledViaRepeatInput {
+  from: DateTime!
+  to: DateTime!
+  workspaceId: Int!
+}
+
+input GetFileInfoInput {
+  url: String!
+}
+
+input GetMediaFromUrlInput {
+  contentType: String!
+  customPostItemId: Int!
+  fileName: String!
+  url: String!
+}
+
+input GetMentionSuggestionsInput {
+  accountId: Int
+  query: String!
+  social: SocialEnum!
+}
+
+input GetPreSignedMediaUploadUrlInput {
+  contentType: String!
+  fileName: String!
+}
+
+input GetPreSignedUrlForPostItemMediaInput {
+  contentType: String!
+  customPostItemId: Int!
+  fileName: String!
+}
+
+input IntFilterInput {
+  eq: Int
+  ge: Int
+  gt: Int
+  in: [Int!]
+  le: Int
+  lt: Int
+  ne: Int
+}
+
+type LinkInfoType {
+  description: String
+  imageUrl: String
+  thumbUrl: String
+  title: String
+  url: String!
+}
+
+type ListModelTypeCustomPostType {
+  nodes: [CustomPostType]
+  totalCount: Int
+}
+
+type ListModelTypeMediaType {
+  nodes: [MediaType]
+  totalCount: Int
+}
+
+scalar Long
+
+input MediaFilterInput {
+  isInLibrary: BoolFilterInput
+  workspaceId: IntFilterInput
+}
+
+type MediaFromUrlType {
+  customPostItemId: Int!
+  url: String!
+}
+
+enum MediaPurposeEnum {
+  ACCOUNT_LOGO
+  AUTOMATION_LOGO
+  LINK_IMAGE
+  POSTING
+  PREVIEW_URL
+  THUMB
+  THUMBNAIL
+  WATERMARK
+}
+
+enum MediaSourceEnum {
+  ADOBE_EXPRESS
+  AUTOMATION
+  DIRECT_UPLOAD
+  DROPBOX
+  GOOGLE_DRIVE
+  IMAGE_EDITOR
+  LINK
+  ONE_DRIVE
+}
+
+type MediaType {
+  bitRate: Long
+  duration: Float
+  fileSize: Long!
+  frameRate: Float
+  height: Int
+  id: Int!
+  mediaType: MediaTypeEnum!
+  name: String!
+  poster: MediaType
+  thumbUrl: String
+  thumbnail: MediaType
+  url: String!
+  width: Int
+  workspaceId: Int!
+}
+
+enum MediaTypeEnum {
+  PHOTO
+  PREVIEW_LINK
+  VIDEO
+}
+
+type MentionSuggestionType {
+  display: String
+  id: String!
+}
+
+enum PostItemAccountAvailabilityStateEnum {
+  INACTIVE
+  SELECTED
+  UNSELECTED
+}
+
+enum PostItemAccountPublicationStateEnum {
+  FAILURE
+  SUCCESS
+  UNDEFINED
+}
+
+type PostingErrorType {
+  accountDescription: String
+  accountName: String!
+  customPostId: Int!
+  customPostNumber: Int!
+  customPostTitle: String
+  exceptionMessage: String
+  scheduledDate: DateTime
+  social: SocialEnum!
+  type: String!
+  workspaceName: String!
+}
+
+enum PostingExceptionCodeEnum {
+  ACCOUNT_IS_PAUSED
+  FACEBOOK_ACCOUNT_IS_BLOCKED_OR_DELETED
+  FACEBOOK_SUBJECT_DOES_NOT_HAVE_PERMISSION_TO_POST
+  INSTAGRAM_ACCOUNT_IS_BLOCKED_OR_DELETED
+  INSTAGRAM_NOT_A_BUSINESS_ACCOUNT
+  NO_COMPARABLE_ERROR_TYPE_FOUND
+  X_ACCOUNT_LOCKED
+  X_ACCOUNT_SUSPENDED
+  X_API_CREDITS_EXHAUSTED
+  X_DAILY_POST_LIMIT_REACHED
+  X_PERMISSION_DENIED
+  X_TOKEN_INVALID_OR_EXPIRED
+  X_USER_CREDITS_EXHAUSTED
+}
+
+type PostingMutation {
+  acceptPostingErrorInCustomPost(customPostId: Int): Int
+  createCustomPost(customPost: CreateCustomPostInput!): CustomPostType
+  deleteCustomPost(customPostId: Int): Int
+  duplicateCustomPost(customPostId: Int): CustomPostType
+  publishCustomPost(customPostId: Int): Int
+  publishCustomPostItem(customPostItemId: Int): Int
+  removePostItemMedia(customPostItemMediaId: Int): CustomPostItemType
+  removePostMedia(customPostMediaId: Int): CustomPostType
+  scheduleCustomPost(customPostId: Int): CustomPostType
+  scheduleCustomPostItem(customPostItemId: Int): CustomPostType
+  selectAccountForCustomPost(customPost: SelectAccountForCustomPostInput!): CustomPostType
+  selectAccountsForCustomPost(customPost: SelectAccountsForCustomPostInput!): CustomPostType
+  selectSocialNetworks(customPost: SelectSocialNetworksInput!): CustomPostType
+  setScheduledPostToDraft(customPost: SetScheduledPostToDraftInput!): CustomPostType
+  unselectAccountForCustomPost(customPost: UnselectAccountForCustomPostInput!): CustomPostType
+  unselectAccountsForCustomPost(customPost: UnselectAccountsForCustomPostInput!): CustomPostType
+  unselectSocialNetworks(customPost: UnselectSocialNetworksInput!): CustomPostType
+  updateCustomPost(customPost: UpdateCustomPostInput!): CustomPostType
+  updateCustomPostItem(customPostItem: UpdateCustomPostItemInput!): CustomPostItemType
+  updateMedia(media: UpdateMediaInput!): MediaType
+  updatePostItemMedia(customPostItemMedia: UpdatePostItemMediaInput!): CustomPostItemType
+  updatePostMedia(customPostMedia: UpdatePostMediaInput!): CustomPostType
+  uploadMedia(media: UploadMediaInput!): MediaType
+  uploadPostItemMedia(customPostItem: UploadPostItemMediaInput!): CustomPostItemType
+  uploadPostMedia(customPost: UploadPostMediaInput!): CustomPostType
+  upsertCustomPostRepeatSettings(customPostRepeatSettings: UpsertCustomPostRepeatSettingsInput!): CustomPostRepeatSettingsType
+}
+
+type PostingQuery {
+  customPost(customPostId: Int): CustomPostType
+  customPostRepeatSettings(customPostRepeatSettings: GetCustomPostRepeatSettingsInput!): CustomPostRepeatSettingsType
+  customPosts(filter: CustomPostFilterInput, skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int): ListModelTypeCustomPostType
+  customPostsScheduledViaRepeat(filter: GetCustomPostsScheduledViaRepeatInput!): [CustomPostType]
+  facebookPages(accountId: Int, name: String): [FacebookPageType]
+  fileInfo(file: GetFileInfoInput!): FileInfoType
+  mediaFromUrl(customPostItemMedia: GetMediaFromUrlInput!): MediaFromUrlType
+  mediaList(filter: MediaFilterInput, skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int): ListModelTypeMediaType
+  mentionSuggestions(filter: GetMentionSuggestionsInput!): [MentionSuggestionType]
+  postingErrors: [PostingErrorType]
+  preSignedMediaUploadUrl(media: GetPreSignedMediaUploadUrlInput!): PreSignedMediaUploadUrlType
+  preSignedUrlForPostItemMedia(customPostItemMedia: GetPreSignedUrlForPostItemMediaInput!): PreSignedUrlForPostItemMediaType
+}
+
+type PostingSubscription {
+  """Subscription to receive real-time updates on post publications"""
+  customPostUpdated(customPostId: Int!): CustomPostType
+}
+
+type PreSignedMediaUploadUrlType {
+  url: String!
+}
+
+type PreSignedUrlForPostItemMediaType {
+  customPostItemId: Int!
+  url: String!
+}
+
+input SelectAccountForCustomPostInput {
+  accountId: Int!
+  customPostId: Int!
+}
+
+input SelectAccountsForCustomPostInput {
+  accountIds: [Int!]!
+  customPostId: Int!
+}
+
+input SelectSocialNetworksInput {
+  customPostId: Int!
+  socialNetworks: [SocialEnum!]!
+}
+
+input SetScheduledPostToDraftInput {
+  customPostId: Int!
+}
+
+enum SocialEnum {
+  BLUESKY
+  FACEBOOK
+  GOOGLE_MY_BUSINESS
+  INSTAGRAM
+  LINKED_IN
+  PINTEREST
+  REDDIT
+  TELEGRAM
+  THREADS
+  TIK_TOK
+  TUMBLR
+  TWITCH
+  X
+  YOU_TUBE
+}
+
+enum SortDirectionEnum {
+  ASC
+  DESC
+}
+
+input StringFilterInput {
+  contains: String
+  eq: String
+  in: [String]
+  ne: String
+  notContains: String
+  startsWith: String
+}
+
+input UnselectAccountForCustomPostInput {
+  accountId: Int!
+  customPostId: Int!
+}
+
+input UnselectAccountsForCustomPostInput {
+  accountIds: [Int!]!
+  customPostId: Int!
+}
+
+input UnselectSocialNetworksInput {
+  customPostId: Int!
+  socialNetworks: [SocialEnum!]!
+}
+
+input UpdateCustomPostInput {
+  customPostId: Int!
+  firstComment: String
+  scheduledDate: DateTime
+  text: String
+  title: String
+  url: String
+}
+
+input UpdateCustomPostItemInput {
+  customPostItemId: Int!
+  extraProperties: DictionaryStringString
+  firstComment: String
+  kind: String
+  location: String
+  text: String
+  text2: String
+  url: String
+  useCommonProperties: Boolean
+}
+
+input UpdateMediaInput {
+  id: Int!
+  isInLibrary: Boolean
+  posterId: Int
+  thumbnailId: Int
+}
+
+input UpdatePostItemMediaInput {
+  customPostItemMediaId: Int!
+  index: Int
+  mediaId: Int
+  mediaType: MediaTypeEnum
+  previewUrl: String
+  thumbnailUrl: String
+  url: String
+}
+
+input UpdatePostMediaInput {
+  customPostMediaId: Int!
+  index: Int
+  mediaId: Int
+  mediaType: MediaTypeEnum
+  previewUrl: String
+  thumbnailUrl: String
+  url: String
+}
+
+input UploadMediaInput {
+  extraProperties: DictionaryStringString
+  fileName: String!
+  isInLibrary: Boolean
+  mediaType: MediaTypeEnum!
+  posterId: Int
+  purpose: MediaPurposeEnum
+  source: MediaSourceEnum!
+  throwIfDuplicate: Boolean
+  url: String!
+  workspaceId: Int!
+}
+
+input UploadPostItemMediaInput {
+  customPostItemId: Int!
+  index: Int!
+  mediaId: Int
+  mediaType: MediaTypeEnum
+  previewUrl: String
+  thumbnailUrl: String
+  url: String
+}
+
+input UploadPostMediaInput {
+  customPostId: Int!
+  index: Int!
+  mediaId: Int
+  mediaType: MediaTypeEnum
+  previewUrl: String
+  thumbnailUrl: String
+  url: String
+}
+
+input UpsertCustomPostRepeatSettingsInput {
+  customPostId: Int!
+  frequency: CustomPostRepeatFrequencyEnum!
+  repeatUntil: DateTime
+  workspaceId: Int!
+}
+
+enum WorkspaceApprovalPolicy {
+  NONE
+  OPTIONAL
+  REQUIRED
+}
+
+type WorkspaceType {
+  accounts: [AccountType]
+  approvalPolicy: WorkspaceApprovalPolicy
+  createdDate: DateTime!
+  id: Int!
+  isCurrent: Boolean
+  logoPath: String
+  name: String!
+  notes: String
+  profileId: Int
+  timeZone: String
+}

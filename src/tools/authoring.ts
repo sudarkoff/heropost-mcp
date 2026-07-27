@@ -38,6 +38,19 @@ const advancedInputSchema = z
       "tool's own arguments for those.",
   );
 
+/** How many media items the post already has, so a new one appends instead of colliding. */
+async function countExistingMedia(
+  client: Parameters<AnyToolDef["handler"]>[1]["client"],
+  postId: number,
+): Promise<number> {
+  const data = await client.request<ListPostsResult>({
+    ...GET_POST,
+    variables: { filter: { id: { eq: postId } } },
+  });
+  const post = (data.customPosts?.nodes ?? []).find((n) => n !== null);
+  return post?.media?.length ?? 0;
+}
+
 /** Reads a post back through the schema-verified `main` service. */
 async function readBack(
   client: Parameters<AnyToolDef["handler"]>[1]["client"],
@@ -73,6 +86,10 @@ const createPost = defineTool({
       .array(z.number().int().positive())
       .min(1)
       .describe("Accounts to post to, from heropost_list_accounts."),
+    postType: z
+      .enum(["TEXT", "IMAGE", "VIDEO", "CAROUSEL", "STORY", "LINK"])
+      .optional()
+      .describe("What kind of post this is. Defaults to TEXT; use IMAGE/VIDEO if attaching media."),
     firstComment: z
       .string()
       .optional()
@@ -84,16 +101,20 @@ const createPost = defineTool({
   },
   async handler(args, { client }) {
     const workspaceId = client.workspaceId(args.workspaceId);
+    // Validate the escape hatch before anything is sent, so a rejected call leaves no
+    // half-created post behind.
+    const extra = sanitizeAdvancedInput(args.advancedInput);
 
+    // CreateCustomPostInput carries only {workspaceId, options} — text and title are not
+    // fields on it, they arrive via updateCustomPost below. `mode` is required; TO_ALL
+    // creates a post item per network, which is what the web app does before narrowing to
+    // specific accounts.
     const created = await client.request<IdResult>({
       ...CREATE_CUSTOM_POST,
       variables: {
         customPost: {
-          // advancedInput goes first so the vetted arguments always win.
-          ...sanitizeAdvancedInput(args.advancedInput),
           workspaceId,
-          ...(args.title ? { title: args.title } : {}),
-          text: args.text,
+          options: { mode: "TO_ALL", allOption: args.postType ?? "TEXT" },
         },
       },
     });
@@ -110,20 +131,24 @@ const createPost = defineTool({
       variables: { customPost: { customPostId: postId, accountIds: args.accountIds } },
     });
 
-    // Text and schedule land via update, mirroring the web app's own sequence.
-    if (args.firstComment || args.scheduledDate || args.text) {
-      await client.request<IdResult>({
-        ...UPDATE_CUSTOM_POST,
-        variables: {
-          customPost: {
-            customPostId: postId,
-            text: args.text,
-            ...(args.firstComment ? { firstComment: args.firstComment } : {}),
-            ...(args.scheduledDate ? { scheduledDate: args.scheduledDate } : {}),
-          },
+    // Text, title, and schedule all land via update — the only place the schema accepts
+    // them. This step is therefore mandatory, not conditional.
+    await client.request<IdResult>({
+      ...UPDATE_CUSTOM_POST,
+      variables: {
+        customPost: {
+          // advancedInput targets this call, not create: CreateCustomPostInput accepts only
+          // {workspaceId, options}, so unmodeled *content* fields belong here. It goes first
+          // so the vetted arguments always win.
+          ...extra,
+          customPostId: postId,
+          text: args.text,
+          ...(args.title ? { title: args.title } : {}),
+          ...(args.firstComment ? { firstComment: args.firstComment } : {}),
+          ...(args.scheduledDate ? { scheduledDate: args.scheduledDate } : {}),
         },
-      });
-    }
+      },
+    });
 
     return jsonResult({
       created: true,
@@ -265,6 +290,12 @@ const uploadPostMedia = defineTool({
     postId: z.number().int().positive(),
     filePath: z.string().min(1).describe("Absolute path to the file on this machine."),
     workspaceId: z.number().int().positive().optional(),
+    index: z
+      .number()
+      .int()
+      .min(0)
+      .optional()
+      .describe("Position among the post's media. Defaults to appending after existing media."),
     social: socialSchema
       .optional()
       .describe("Reserved for per-network media; omit to attach to the whole post."),
@@ -272,6 +303,11 @@ const uploadPostMedia = defineTool({
   },
   async handler(args, { client }) {
     const workspaceId = client.workspaceId(args.workspaceId);
+
+    // `index` is required and orders the media on the post, so append rather than
+    // overwriting: read what's already attached and take the next slot.
+    const index = args.index ?? (await countExistingMedia(client, args.postId));
+
     const media = await uploadLocalFile(client, { workspaceId, filePath: args.filePath });
 
     await client.request<IdResult>({
@@ -280,6 +316,7 @@ const uploadPostMedia = defineTool({
         customPost: {
           ...sanitizeAdvancedInput(args.advancedInput),
           customPostId: args.postId,
+          index,
           mediaId: media.mediaId,
           url: media.url,
           mediaType: media.mediaType,
