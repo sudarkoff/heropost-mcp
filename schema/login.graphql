@@ -1,0 +1,325 @@
+schema {
+  query: MainQuery
+  mutation: MainMutation
+}
+
+input ChangeCurrentUserPasswordInput {
+  confirmNewPassword: String!
+  newPassword: String!
+  oldPassword: String!
+}
+
+input ChangeUserPasswordByUserIdInput {
+  confirmNewPassword: String!
+  id: String!
+  newPassword: String!
+}
+
+enum CheckoutSessionModeEnum {
+  PAYMENT
+  SETUP
+  SUBSCRIPTION
+}
+
+type CheckoutSessionType {
+  id: String!
+  paymentStatus: String!
+}
+
+input CreateCheckoutSessionInput {
+  checkoutSessionMode: CheckoutSessionModeEnum
+  customer: String!
+  extendedTrial: Boolean
+  items: [CreateSubscriptionItemInput]
+  paymentProduct: ProductEnum
+  refCode: String
+  trial: Boolean!
+}
+
+input CreateSubscriptionItemInput {
+  price: String!
+  quantity: Long!
+}
+
+input CreateUserInput {
+  email: String!
+  firstName: String!
+  lastName: String!
+  password: String!
+  paymentProducts: [String]
+}
+
+type CustomerPortalLinkType {
+  link: String!
+}
+
+type CustomerType {
+  email: String!
+  id: String!
+}
+
+"""
+The `DateTime` scalar type represents a date and time. `DateTime` expects timestamps to be formatted in accordance with the [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601) standard.
+"""
+scalar DateTime
+
+input EnumFilterInputStripeSubscriptionBillingCycleEnum {
+  eq: StripeSubscriptionBillingCycleEnum
+  in: [StripeSubscriptionBillingCycleEnum!]
+  ne: StripeSubscriptionBillingCycleEnum
+}
+
+input EnumFilterInputUserStatusEnum {
+  eq: UserStatusEnum
+  in: [UserStatusEnum!]
+  ne: UserStatusEnum
+}
+
+input IntFilterInput {
+  eq: Int
+  ge: Int
+  gt: Int
+  in: [Int!]
+  le: Int
+  lt: Int
+  ne: Int
+}
+
+type ListModelTypeSocialNetworkPriceType {
+  nodes: [SocialNetworkPriceType]
+  totalCount: Int
+}
+
+type ListModelTypeSocialNetworkProductType {
+  nodes: [SocialNetworkProductType]
+  totalCount: Int
+}
+
+type ListModelTypeTimezomeType {
+  nodes: [TimezomeType]
+  totalCount: Int
+}
+
+type ListModelTypeUpcomingInvoiceType {
+  nodes: [UpcomingInvoiceType]
+  totalCount: Int
+}
+
+type ListModelTypeUserType {
+  nodes: [UserType]
+  totalCount: Int
+}
+
+scalar Long
+
+type MainMutation {
+  changeCurrentUserPassword(changePassword: ChangeCurrentUserPasswordInput!): Boolean
+  changeUserPasswordByUserId(changePassword: ChangeUserPasswordByUserIdInput!): Boolean
+  createCheckoutSession(createCheckoutSession: CreateCheckoutSessionInput!): CheckoutSessionType
+  createUser(user: CreateUserInput!): UserType
+  createXCreditCheckoutSession(pack: String!): CheckoutSessionType
+  getOrCreateCustomer: CustomerType
+  updateCurrentUser(user: UpdateCurrentUserInput!): UserType
+  updateUserById(user: UpdateUserByIdInput!): UserType
+  upgradeSubscription(priceId: String!): SubscriptionUpgradeType
+}
+
+type MainQuery {
+  currentSubscription: SubscriptionInfoType
+  currentUser: UserType
+  getCheckoutSession(sessionId: String!): CheckoutSessionType
+  getCustomerPortalLink: CustomerPortalLinkType
+  myReferral: ReferralType
+  previewSubscriptionUpgrade(priceId: String!): SubscriptionUpgradePreviewType
+  retrieveUpcomingInvoice(filter: UpcomingInvoiceFilterInput, skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int, upcomingInvoice: RetrieveUpcomingInvoiceInput!): ListModelTypeUpcomingInvoiceType
+  socialNetworkProducts(filter: SocialNetworkProductFilterInput, skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int): ListModelTypeSocialNetworkProductType
+  stripePublishableKey: String
+  timezones(filter: TimezoneFilterInput, skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int): ListModelTypeTimezomeType
+  user(userId: String): UserType
+  users(filter: UserFilterInput, skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int): ListModelTypeUserType
+  usersCsvFileUri: String
+}
+
+enum ProductEnum {
+  ADVANCED
+  ADVANCED_2
+  ADVANCED_LIFETIME_EXCLUSIVE
+  ESSENTIALS
+  ESSENTIALS_1
+  ESSENTIALS_3
+  HERO
+  HERO_SPECIAL
+  LIFETIME
+  LIFETIME_2
+  LIFETIME_ESSENTIALS_1
+  LIFETIME_ESSENTIALS_3
+  LIFETIME_UNLIMITED
+  MONOLINK
+  PLUS_LIFETIME_EXCLUSIVE
+  SEARCH
+  STARTER
+  TEAM_GUEST
+  UNLIMITED
+}
+
+type ReferralType {
+  code: String!
+  conversions: Int!
+  pendingPayout: Long!
+  topPayout: Long!
+  totalEarned: Long!
+}
+
+input RetrieveUpcomingInvoiceInput {
+  customer: String!
+  subscription: String
+  subscriptionItems: [RetrieveUpcomingInvoiceItemInput]
+}
+
+input RetrieveUpcomingInvoiceItemInput {
+  billingCycle: StripeSubscriptionBillingCycleEnum
+  price: String!
+  quantity: Long!
+}
+
+type SocialNetworkPriceType {
+  billingScheme: String
+  currency: String
+  id: String
+  interval: String
+  intervalCount: Int
+  product: String
+  unitAmountDecimal: String
+}
+
+input SocialNetworkProductFilterInput {
+  description: StringFilterInput
+  id: StringFilterInput
+  name: StringFilterInput
+  paymentProduct: StringFilterInput
+  search: String
+}
+
+type SocialNetworkProductType {
+  description: String
+  id: String!
+  name: String
+  paymentProduct: String!
+  prices: ListModelTypeSocialNetworkPriceType
+}
+
+enum SortDirectionEnum {
+  ASC
+  DESC
+}
+
+input StringFilterInput {
+  contains: String
+  eq: String
+  in: [String]
+  ne: String
+  notContains: String
+  startsWith: String
+}
+
+enum StripeSubscriptionBillingCycleEnum {
+  DAY
+  MONTH
+  WEEK
+  YEAR
+}
+
+type SubscriptionInfoType {
+  cancelAtPeriodEnd: Boolean!
+  currency: String!
+  interval: String
+  intervalCount: Long!
+  paymentProduct: String
+  priceId: String!
+  productId: String!
+  renewalDate: DateTime!
+  subscriptionId: String!
+  unitAmount: Long!
+}
+
+type SubscriptionUpgradePreviewType {
+  amountDueToday: Long!
+  currency: String!
+  newRecurringAmount: Long!
+  recurringInterval: String
+  renewalDate: DateTime!
+}
+
+type SubscriptionUpgradeType {
+  paymentProduct: String!
+  productId: String!
+  subscriptionId: String!
+}
+
+type TimezomeType {
+  key: String!
+  value: String!
+}
+
+input TimezoneFilterInput {
+  key: StringFilterInput
+  search: String
+  value: StringFilterInput
+}
+
+input UpcomingInvoiceFilterInput {
+  billingCycle: EnumFilterInputStripeSubscriptionBillingCycleEnum
+  currency: StringFilterInput
+  search: String
+  total: IntFilterInput
+}
+
+type UpcomingInvoiceType {
+  billingCycle: StripeSubscriptionBillingCycleEnum
+  currency: String!
+  total: Long!
+}
+
+input UpdateCurrentUserInput {
+  email: String
+  firstName: String
+  lastName: String
+}
+
+input UpdateUserByIdInput {
+  email: String
+  firstName: String
+  id: String!
+  lastName: String
+  paymentProducts: [String]
+  status: UserStatusEnum
+}
+
+input UserFilterInput {
+  createdDate: StringFilterInput
+  email: StringFilterInput
+  firstName: StringFilterInput
+  id: StringFilterInput
+  lastName: StringFilterInput
+  modifiedDate: StringFilterInput
+  search: String
+  status: EnumFilterInputUserStatusEnum
+  userIPAddress: StringFilterInput
+}
+
+enum UserStatusEnum {
+  ACTIVE
+  INACTIVE
+}
+
+type UserType {
+  createdDate: String
+  email: String
+  firstName: String
+  id: String!
+  lastName: String
+  modifiedDate: String
+  paymentProducts: [String]
+  status: UserStatusEnum
+  userIPAddress: String
+}

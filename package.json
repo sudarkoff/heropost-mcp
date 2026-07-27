@@ -1,0 +1,54 @@
+{
+  "name": "heropost-mcp",
+  "version": "0.1.0",
+  "description": "Unofficial MCP server for Heropost — read your posting calendar, pull analytics, work the social inbox, and compose scheduled posts from an AI agent.",
+  "license": "MIT",
+  "author": "George Sudarkoff",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sudarkoff/heropost-mcp.git"
+  },
+  "homepage": "https://github.com/sudarkoff/heropost-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/sudarkoff/heropost-mcp/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "heropost",
+    "social-media",
+    "scheduling",
+    "claude"
+  ],
+  "type": "module",
+  "bin": {
+    "heropost-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "schema",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "introspect": "node scripts/introspect.mjs",
+    "prepublishOnly": "npm run typecheck && npm run test && npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "graphql": "^16.11.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.1.0"
+  }
+}

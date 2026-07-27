@@ -1,0 +1,1405 @@
+schema {
+  query: MainQuery
+  mutation: MainMutation
+}
+
+enum AccountCategoryEnum {
+  BOARD
+  CHANNEL
+  GROUP
+  PAGE
+  PROFILE
+}
+
+type AccountDetailType {
+  backgroundImageUrl: String
+  engagementRate: Int!
+  id: Int!
+  numberOfFollowers: Int!
+  numberOfPosts: Int!
+}
+
+input AccountFilterInput {
+  accountCategory: EnumFilterInputAccountCategoryEnum
+  createdDate: DateFilterInput
+  description: StringFilterInput
+  name: StringFilterInput
+  social: EnumFilterInputSocialEnum
+  userName: StringFilterInput
+}
+
+type AccountSnapshotType {
+  accountId: Int!
+  date: DateTime!
+  followers: Int
+  social: SocialEnum!
+}
+
+type AccountType {
+  accountCategory: AccountCategoryEnum
+  accountDetails: AccountDetailType
+  availabilityState: PostItemAccountAvailabilityStateEnum!
+  createdDate: DateTime!
+  description: String
+  exceptionCode: PostingExceptionCodeEnum
+  exceptionMessage: String
+  extraProperties: DictionaryStringString
+  id: Int!
+  isDeleted: Boolean!
+  isPaused: Boolean!
+  linkToPost: String
+  logoPath: String
+  name: String!
+  pausedReason: String
+  pid: String!
+  profileId: Int!
+  publicationResponseInfo: String
+  publicationState: PostItemAccountPublicationStateEnum!
+  selectedForCalendarView: Boolean!
+  social: SocialEnum
+  url: String
+  userName: String
+  workspace: WorkspaceType
+}
+
+input AddAuthorToFavoritesInput {
+  authorId: Int!
+  workspaceId: Int!
+}
+
+enum AnalyticsGroupByEnum {
+  DAILY
+  HOURLY
+  MONTHLY
+  POST
+  YEARLY
+}
+
+input AttachTokenInput {
+  accountId: Int!
+  authorizationCode: String!
+}
+
+enum AutomationActionEnum {
+  PUBLISH_IMMEDIATELY
+  READ
+}
+
+enum AutomationAttachLinkToCaptionEnum {
+  ALWAYS
+  IF_LINK_POST_NOT_SUPPORTED
+  NEVER
+}
+
+input AutomationFilterInput {
+  createdDate: DateFilterInput
+  workspaceId: IntFilterInput
+}
+
+enum AutomationFrequencyEnum {
+  DAYS_1
+  HOURS_1
+  HOURS_12
+}
+
+input AutomationItemFilterInput {
+  automationId: IntFilterInput
+  createdDate: DateFilterInput
+  isLatest: BoolFilterInput
+}
+
+type AutomationItemType {
+  automationId: Int!
+  customPostId: Int
+  description: String
+  id: Int!
+  isLatest: Boolean!
+  linkInfo: LinkInfoType
+  linkInfoId: Int
+  thumbUrl: String
+  title: String
+}
+
+enum AutomationPostImageEnum {
+  ALWAYS
+  IF_LINK_POST_NOT_SUPPORTED
+  NEVER
+}
+
+type AutomationType {
+  accounts: [AccountType]
+  action: AutomationActionEnum!
+  attachLinkToCaption: AutomationAttachLinkToCaptionEnum!
+  autoPost: Boolean!
+  backupPostType: CreateCustomPostOption!
+  blackListWords: String
+  customCaption: String!
+  errors: Int!
+  fetched: Int!
+  frequency: AutomationFrequencyEnum!
+  id: Int!
+  imageUrl: String!
+  postImage: AutomationPostImageEnum!
+  preferredPostType: CreateCustomPostOption!
+  skipped: Int!
+  title: String!
+  type: AutomationTypeEnum!
+  url: String!
+  useCustomCaption: Boolean!
+  whiteListWords: String
+  workspaceId: Int!
+}
+
+enum AutomationTypeEnum {
+  AIRTABLE
+  CANVA
+  ETSY
+  GOOGLE_REVIEWS
+  GOOGLE_SHEETS
+  MEDIUM
+  NOTION
+  PODCAST
+  RSS
+  SHOPIFY
+  SPOTIFY
+  SQUARESPACE
+  SUBSTACK
+  TELEGRAM
+  WOOCOMMERCE
+  WORDPRESS
+  YOUTUBE
+}
+
+input BoolFilterInput {
+  eq: Boolean
+  ne: Boolean
+}
+
+input BulkUploadCsvInput {
+  csvFileUrl: String!
+  postingGroupId: Int!
+  workspaceId: Int!
+}
+
+type BulkUploadItemErrorType {
+  error: String
+  rowNumber: Int!
+}
+
+type BulkUploadItemType {
+  bulkUploadId: Int!
+  caption: String
+  comment: String
+  date: String
+  error: String
+  id: Int!
+  link: String
+  media: String
+  postId: Int
+  processed: Boolean!
+  rowNumber: Int!
+  thumbnail: String
+  title: String
+  type: String
+}
+
+input BulkUploadStatusInput {
+  id: Int!
+}
+
+type BulkUploadStatusType {
+  id: Int!
+  items: [BulkUploadItemErrorType]
+  processed: Boolean!
+}
+
+type BulkUploadType {
+  createdDate: DateTime!
+  id: Int!
+  items: [BulkUploadItemType]
+  postingGroupId: Int!
+  workspaceId: Int!
+}
+
+input ConnectLinkedInInboxInput {
+  accountId: Int!
+  authorizationCode: String!
+  redirectUri: String!
+}
+
+input CreateAccountInput {
+  accountCategory: AccountCategoryEnum!
+  description: String
+  logoPath: String!
+  name: String!
+  pid: String!
+  social: SocialEnum!
+  token: CreateAccountTokenInput
+  url: String!
+  userName: String!
+  workspaceId: Int!
+}
+
+input CreateAccountTokenInput {
+  authorizationCode: String!
+}
+
+input CreateAutomationInput {
+  frequency: AutomationFrequencyEnum!
+  type: AutomationTypeEnum!
+  url: String!
+  workspaceId: Int!
+}
+
+enum CreateCustomPostOption {
+  CAROUSEL
+  IMAGE
+  LINK
+  STORY
+  TEXT
+  VIDEO
+}
+
+input CreateDraftPostsFromBulkUploadInput {
+  bulkUploadId: Int!
+}
+
+input CreatePostCommentInput {
+  customPostId: Int!
+  text: String!
+}
+
+input CreatePostFromAutomationItemInput {
+  id: Int!
+}
+
+input CreatePostingGroupInput {
+  accountIds: [Int!]!
+  name: String!
+  workspaceId: Int!
+}
+
+input CreateTokenInput {
+  accountCategory: AccountCategoryEnum
+  authorizationCode: String!
+  pid: String
+  social: SocialEnum!
+  verifier: String
+  workspaceId: Int!
+}
+
+input CreateUpdateProfileInput {
+  avatarPath: String
+  onboardedDate: DateTime
+  profileSocials: [ProfileSocialInput]
+  userId: ID!
+}
+
+input CreateWorkspaceAccessTokenInput {
+  email: String!
+  fullName: String!
+  workspaceId: Int!
+}
+
+input CreateWorkspaceInput {
+  isCurrent: Boolean
+  name: String!
+  notes: String
+  timeZone: String
+}
+
+input CreateWorkspaceInviteInput {
+  email: String!
+  role: WorkspaceMemberRole
+  workspaceId: Int!
+}
+
+input CustomPostFilterInput {
+  hasPostingFailure: BoolFilterInput
+  id: IntFilterInput
+  postStatus: EnumFilterInputCustomPostStatusEnum
+  postedDate: DateFilterInput
+  scheduledDate: DateFilterInput
+  title: StringFilterInput
+  updatedDate: DateFilterInput
+  workspaceId: IntFilterInput
+}
+
+type CustomPostItemMediaType {
+  customPostItemId: Int!
+  duration: Float
+  fileSize: Long
+  height: Int
+  id: Int!
+  index: Int!
+  isExpired: Boolean!
+  mediaId: Int
+  mediaType: MediaTypeEnum!
+  name: String
+  previewUrl: String
+  thumbUrl: String
+  thumbnailUrl: String
+  url: String
+  width: Int
+}
+
+enum CustomPostItemPublishingStatusEnum {
+  COMPLETED
+  EDITED
+  PENDING
+  SCHEDULED
+}
+
+type CustomPostItemType {
+  accounts: [AccountType]
+  customPostId: Int!
+  enabled: Boolean!
+  extraProperties: DictionaryStringString
+  firstComment: String
+  id: Int!
+  kind: String
+  linkInfo: LinkInfoType
+  location: String
+  media: [CustomPostItemMediaType]
+  publishingStatus: CustomPostItemPublishingStatusEnum!
+  social: SocialEnum!
+  text: String
+  text2: String
+  updatedDate: DateTime!
+  url: String
+  useCommonProperties: Boolean!
+}
+
+type CustomPostMediaType {
+  customPostId: Int!
+  duration: Float
+  fileSize: Long
+  height: Int
+  id: Int!
+  index: Int!
+  isExpired: Boolean!
+  mediaId: Int
+  mediaType: MediaTypeEnum!
+  name: String
+  previewUrl: String
+  thumbUrl: String
+  thumbnailUrl: String
+  url: String
+  width: Int
+}
+
+enum CustomPostStatusEnum {
+  DRAFT
+  IN_PROGRESS
+  PENDING_APPROVAL
+  POSTED
+  SCHEDULED
+}
+
+type CustomPostType {
+  firstComment: String
+  hasPostingFailure: Boolean!
+  id: Int!
+  linkInfo: LinkInfoType
+  media: [CustomPostMediaType]
+  number: Int!
+  postItems: [CustomPostItemType]
+  postStatus: CustomPostStatusEnum!
+  postedDate: DateTime
+  scheduledDate: DateTime
+  showAllTab: Boolean!
+  text: String
+  title: String
+  updatedDate: DateTime!
+  url: String
+  userShouldAcceptPostingError: Boolean!
+  workspaceId: Int!
+}
+
+input DateFilterInput {
+  between: [DateTime!]
+  eq: DateTime
+  ge: DateTime
+  gt: DateTime
+  le: DateTime
+  lt: DateTime
+  ne: DateTime
+}
+
+"""
+The `DateTime` scalar type represents a date and time. `DateTime` expects timestamps to be formatted in accordance with the [ISO-8601](https://en.wikipedia.org/wiki/ISO_8601) standard.
+"""
+scalar DateTime
+
+scalar Decimal
+
+input DeleteAutomationInput {
+  id: Int!
+}
+
+input DeletePostingGroupInput {
+  id: Int!
+}
+
+input DeleteTextInput {
+  id: Int!
+}
+
+input DeleteWatermarkInput {
+  accountId: Int
+  workspaceId: Int!
+}
+
+scalar DictionaryStringString
+
+input DuplicateCustomPostInput {
+  customPostId: Int!
+  failedOnly: Boolean!
+}
+
+input EnumFilterInputAccountCategoryEnum {
+  eq: AccountCategoryEnum
+  in: [AccountCategoryEnum!]
+  ne: AccountCategoryEnum
+}
+
+input EnumFilterInputCustomPostStatusEnum {
+  eq: CustomPostStatusEnum
+  in: [CustomPostStatusEnum!]
+  ne: CustomPostStatusEnum
+}
+
+input EnumFilterInputInboxThreadTypeEnum {
+  eq: InboxThreadTypeEnum
+  in: [InboxThreadTypeEnum!]
+  ne: InboxThreadTypeEnum
+}
+
+input EnumFilterInputNotificationTypeEnum {
+  eq: NotificationTypeEnum
+  in: [NotificationTypeEnum!]
+  ne: NotificationTypeEnum
+}
+
+input EnumFilterInputSocialEnum {
+  eq: SocialEnum
+  in: [SocialEnum!]
+  ne: SocialEnum
+}
+
+type FacebookLocationType {
+  city: String
+  country: String
+  latitude: Decimal
+  longitude: Decimal
+  street: String
+  zip: String
+}
+
+type FacebookPageType {
+  id: String!
+  location: FacebookLocationType
+  name: String!
+}
+
+type FeedbackType {
+  createdDate: DateTime!
+  id: Int!
+}
+
+input GetAccountSnapshotsInput {
+  accountIds: [Int!]
+  from: DateTime!
+  socials: [SocialEnum!]
+  to: DateTime!
+}
+
+input GetAutomationInput {
+  id: Int!
+}
+
+input GetCustomPostsScheduledViaRepeatInput {
+  from: DateTime!
+  to: DateTime!
+  workspaceId: Int!
+}
+
+input GetMentionSuggestionsInput {
+  accountId: Int
+  query: String!
+  social: SocialEnum!
+}
+
+input GetPostAnalyticsDownloadUrlInput {
+  accountIds: [Int!]
+  from: DateTime!
+  socials: [SocialEnum!]
+  timeZone: String!
+  to: DateTime!
+  workspaceIds: [Int!]
+}
+
+input GetPostAnalyticsInput {
+  accountIds: [Int!]
+  from: DateTime!
+  groupBy: AnalyticsGroupByEnum!
+  socials: [SocialEnum!]
+  timeZone: String!
+  to: DateTime!
+  workspaceIds: [Int!]
+}
+
+input GetPostAnalyticsRawInput {
+  accountIds: [Int!]
+  from: DateTime!
+  socials: [SocialEnum!]
+  timeZone: String!
+  to: DateTime!
+  workspaceIds: [Int!]
+}
+
+input GetWatermarkInput {
+  accountId: Int
+  workspaceId: Int!
+}
+
+scalar Guid
+
+type InboxMessageQueryType {
+  authorAvatarUrl: String
+  authorName: String
+  authorPlatformId: String
+  createdDate: DateTime!
+  id: Int!
+  inboxThreadId: Int!
+  isFromMe: Boolean!
+  mediaUrl: String
+  platformMessageId: String
+  platformTimestamp: DateTime!
+  text: String
+}
+
+input InboxThreadFilterInput {
+  isBookmarked: BoolFilterInput
+  isDone: BoolFilterInput
+  isRead: BoolFilterInput
+  threadType: EnumFilterInputInboxThreadTypeEnum
+}
+
+type InboxThreadQueryType {
+  accountId: Int!
+  accountLogoPath: String
+  accountName: String
+  createdDate: DateTime!
+  id: Int!
+  isBookmarked: Boolean!
+  isDone: Boolean!
+  isRead: Boolean!
+  lastActivityAt: DateTime!
+  messages: [InboxMessageQueryType]
+  participantAvatarUrl: String
+  participantName: String
+  participantPlatformId: String
+  platformThreadId: String
+  postCaption: String
+  postPermalink: String
+  postPlatformId: String
+  postThumbnailUrl: String
+  socialId: Int!
+  threadType: InboxThreadTypeEnum!
+  unreadCount: Int!
+  workspaceId: Int!
+}
+
+enum InboxThreadTypeEnum {
+  COMMENT
+  DIRECT_MESSAGE
+  MENTION
+}
+
+input InsertTextInput {
+  content: String!
+  name: String
+  workspaceId: Int!
+}
+
+input IntFilterInput {
+  eq: Int
+  ge: Int
+  gt: Int
+  in: [Int!]
+  le: Int
+  lt: Int
+  ne: Int
+}
+
+type LinkInfoType {
+  description: String
+  imageUrl: String
+  thumbUrl: String
+  title: String
+  url: String!
+}
+
+type ListModelTypeAccountType {
+  nodes: [AccountType]
+  totalCount: Int
+}
+
+type ListModelTypeAutomationItemType {
+  nodes: [AutomationItemType]
+  totalCount: Int
+}
+
+type ListModelTypeAutomationType {
+  nodes: [AutomationType]
+  totalCount: Int
+}
+
+type ListModelTypeCustomPostType {
+  nodes: [CustomPostType]
+  totalCount: Int
+}
+
+type ListModelTypeInboxThreadQueryType {
+  nodes: [InboxThreadQueryType]
+  totalCount: Int
+}
+
+type ListModelTypeNotificationType {
+  nodes: [NotificationType]
+  totalCount: Int
+}
+
+type ListModelTypePostAuthorType {
+  nodes: [PostAuthorType]
+  totalCount: Int
+}
+
+type ListModelTypePostType {
+  nodes: [PostType]
+  totalCount: Int
+}
+
+type ListModelTypePostingGroupType {
+  nodes: [PostingGroupType]
+  totalCount: Int
+}
+
+type ListModelTypeSocialAccountType {
+  nodes: [SocialAccountType]
+  totalCount: Int
+}
+
+type ListModelTypeSocialType {
+  nodes: [SocialType]
+  totalCount: Int
+}
+
+type ListModelTypeSystemSettingType {
+  nodes: [SystemSettingType]
+  totalCount: Int
+}
+
+type ListModelTypeTextType {
+  nodes: [TextType]
+  totalCount: Int
+}
+
+type ListModelTypeWorkspaceKeywordType {
+  nodes: [WorkspaceKeywordType]
+  totalCount: Int
+}
+
+type ListModelTypeWorkspaceType {
+  nodes: [WorkspaceType]
+  totalCount: Int
+}
+
+scalar Long
+
+type MainMutation {
+  acceptTeamInvite(token: String!): WorkspaceMemberType
+  addAuthorToFavorites(addAuthorToFavorites: AddAuthorToFavoritesInput!): PostAuthorType
+  addPostComment(comment: CreatePostCommentInput!): PostCommentType
+  attachToken(data: AttachTokenInput!): TokenType
+  bulkUploadCsv(bulkUploadCsv: BulkUploadCsvInput!): BulkUploadType
+
+  """
+  Exchange an OAuth code from the LinkedIn inbox app (Community Management API) and store the tokens on the account
+  """
+  connectLinkedInInbox(input: ConnectLinkedInInboxInput!): Boolean
+  createAccount(account: CreateAccountInput!): AccountType
+  createAutomation(automation: CreateAutomationInput!): AutomationType
+  createDraftPostsFromBulkUpload(createDraftPosts: CreateDraftPostsFromBulkUploadInput!): Int
+  createPostFromAutomationItem(automationItem: CreatePostFromAutomationItemInput!): Int
+  createPostingGroup(postingGroup: CreatePostingGroupInput!): PostingGroupType
+  createTeamInvite(invite: CreateWorkspaceInviteInput!): WorkspaceInviteType
+  createToken(token: CreateTokenInput!): TokenType
+  createUpdateProfile(profile: CreateUpdateProfileInput!): ProfileType
+  createWorkspace(workspace: CreateWorkspaceInput!): WorkspaceType
+
+  """Create an invitation token for public workspace access"""
+  createWorkspaceAccessToken(token: CreateWorkspaceAccessTokenInput!): WorkspaceAccessTokenType
+  declineTeamInvite(token: String!): Boolean
+  deleteAutomation(automation: DeleteAutomationInput!): Int
+  deleteNotifications(notificationIds: [Int]): [Int]
+  deletePostComment(commentId: Int!): Boolean
+  deletePostingGroup(postingGroup: DeletePostingGroupInput!): Int
+  deleteText(text: DeleteTextInput!): Int
+  deleteWatermark(watermark: DeleteWatermarkInput!): Boolean
+  deleteWorkspace(id: Int): Int
+  duplicateCustomPost(customPost: DuplicateCustomPostInput!): CustomPostType
+  insertText(text: InsertTextInput!): TextType
+  likeInboxComment(messageId: Int!): Boolean
+  markInboxThreadDone(threadId: Int!): Boolean
+  markInboxThreadRead(threadId: Int!): Boolean
+
+  """Create account with public access (requires workspace access token)"""
+  publicCreateAccount(accessToken: PublicAccessTokenInput!, account: CreateAccountInput!): AccountType
+
+  """Create token with public access (requires workspace access token)"""
+  publicCreateToken(accessToken: PublicAccessTokenInput!, token: CreateTokenInput!): TokenType
+  pullAutomation(automationId: Int!): AutomationType
+  removeAccountFromPlatform(accountId: Int): Int
+  removeAuthorFromFavorites(removeAuthorFromFavorites: RemoveAuthorFromFavoritesInput!): PostAuthorType
+  removeTeamMember(memberId: Int!): Boolean
+  replyToInboxThread(input: ReplyToInboxThreadInput!): InboxMessageQueryType
+  reviewPostApproval(review: ReviewApprovalInput!): PostApprovalType
+  revokeTeamInvite(inviteId: Int!): Boolean
+  selectAccountsForCalendarView(workspace: SelectAccountsForCalendarViewInput!): WorkspaceType
+  setPrivateApiCreds(privateApiCreds: SetPrivateApiCredsInput!): AccountType
+  submitFeedback(feedback: SubmitFeedbackInput!): FeedbackType
+  submitPostForApproval(customPostId: Int!): PostApprovalType
+  toggleInboxBookmark(threadId: Int!): Boolean
+  unselectAccountsForCalendarView(workspace: UnselectAccountsForCalendarViewInput!): WorkspaceType
+  updateAccount(account: UpdateAccountInput!): AccountType
+  updateAutomation(automation: UpdateAutomationInput!): AutomationType
+  updatePostingGroup(postingGroup: UpdatePostingGroupInput!): PostingGroupType
+  updateTeamMemberRole(member: UpdateMemberRoleInput!): WorkspaceMemberType
+  updateTeamNotificationPreferences(preferences: UpdateTeamNotificationPreferenceInput!): TeamNotificationPreferenceType
+  updateText(text: UpdateTextInput!): TextType
+  updateWorkspace(workspace: UpdateWorkspaceInput!): WorkspaceType
+  uploadProfileAvatar(file: Upload, userId: ID): String
+  uploadWorkspaceLogo(file: Upload, workspaceId: Int): String
+  upsertWatermark(watermark: UpsertWatermarkInput!): WatermarkType
+  viewNotifications(workspaceId: Int): ListModelTypeNotificationType
+}
+
+type MainQuery {
+  account(id: Int): AccountType
+  accountSnapshots(filter: GetAccountSnapshotsInput!): [AccountSnapshotType]
+  accounts(filter: AccountFilterInput, skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int): ListModelTypeAccountType
+  automation(automation: GetAutomationInput!): AutomationType
+  automationItemList(filter: AutomationItemFilterInput, skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int): ListModelTypeAutomationItemType
+  automationList(filter: AutomationFilterInput, skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int): ListModelTypeAutomationType
+  bulkUploadStatus(bulkUploadStatus: BulkUploadStatusInput!): BulkUploadStatusType
+  customPosts(filter: CustomPostFilterInput, skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int): ListModelTypeCustomPostType
+  customPostsScheduledViaRepeat(filter: GetCustomPostsScheduledViaRepeatInput!): [CustomPostType]
+  facebookPages(accountId: Int, name: String): [FacebookPageType]
+  favoriteAccounts(filter: PostAuthorFilterInput, skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int, workspaceId: Int): ListModelTypePostAuthorType
+  getPostAnalyticsDownloadUrl(filter: GetPostAnalyticsDownloadUrlInput!): PostAnalyticsDownloadUrlType
+  getXRequestToken(returnUrl: String): String
+  inboxThread(threadId: Int!): InboxThreadQueryType
+  inboxThreads(filter: InboxThreadFilterInput, skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int, workspaceId: Int): ListModelTypeInboxThreadQueryType
+  mentionSuggestions(filter: GetMentionSuggestionsInput!): [MentionSuggestionType]
+  notifications(filter: NotificationFilterInput, skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int, workspaceId: Int): ListModelTypeNotificationType
+  planUsage: PlanUsageType
+  postAnalytics(filter: GetPostAnalyticsInput): [PostAnalyticsType]
+  postAnalyticsRaw(filter: GetPostAnalyticsRawInput): [PostAnalyticsRawType]
+  postComments(workspaceId: Int!): [PostCommentType]
+  postingGroupList(filter: PostingGroupFilterInput, skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int): ListModelTypePostingGroupType
+  profile(userId: Guid): ProfileType
+
+  """
+  Get X request token with public access (requires workspace access token)
+  """
+  publicGetXRequestToken(accessToken: PublicAccessTokenInput!, returnUrl: String): String
+
+  """
+  Get social accounts with public access (requires workspace access token)
+  """
+  publicSocialAccounts(accessToken: PublicAccessTokenInput!, token: SocialAccountFilterInput): ListModelTypeSocialAccountType
+  publicSystemSettings(filter: SystemSettingFilterInput, skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int): ListModelTypeSystemSettingType
+  searchKeywordsByString(searchString: String): [String]
+  searchPosts(filter: PostFilterInput, keywords: [String], skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int, workspaceId: Int): ListModelTypePostType
+  social(id: Int): SocialType
+  socialAccounts(token: SocialAccountFilterInput): ListModelTypeSocialAccountType
+  socials(filter: SocialFilterInput, skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int): ListModelTypeSocialType
+  systemSetting(social: SocialEnum): SystemSettingType
+  systemSettings(filter: SystemSettingFilterInput, skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int): ListModelTypeSystemSettingType
+  teamApprovals(status: PostApprovalStatus, workspaceId: Int!): [PostApprovalType]
+  teamMembers(workspaceId: Int!): [WorkspaceMemberType]
+  teamNotificationPreferences(workspaceId: Int!): TeamNotificationPreferenceType
+  teamPendingInvites(workspaceId: Int!): [WorkspaceInviteType]
+  textList(filter: TextFilterInput, skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int): ListModelTypeTextType
+  topRelatedAccountPosts(filter: PostFilterInput, skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int, userId: String): ListModelTypePostType
+  topRelatedAccounts(filter: PostAuthorFilterInput, keywords: [String], skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int, workspaceId: Int): ListModelTypePostAuthorType
+  watermark(watermark: GetWatermarkInput!): WatermarkType
+  workspace(id: Int): WorkspaceType
+  workspaceKeywords(workspaceId: Int): ListModelTypeWorkspaceKeywordType
+  workspaces(filter: WorkspaceFilterInput, skip: Int, sortDirection: SortDirectionEnum, sortField: String, take: Int): ListModelTypeWorkspaceType
+  xCreditBalance: XCreditBalanceType
+}
+
+type MediaType {
+  bitRate: Long
+  duration: Float
+  fileSize: Long!
+  frameRate: Float
+  height: Int
+  id: Int!
+  mediaType: MediaTypeEnum!
+  name: String!
+  poster: MediaType
+  thumbUrl: String
+  thumbnail: MediaType
+  url: String!
+  width: Int
+  workspaceId: Int!
+}
+
+enum MediaTypeEnum {
+  PHOTO
+  PREVIEW_LINK
+  VIDEO
+}
+
+type MentionSuggestionType {
+  display: String
+  id: String!
+}
+
+input NotificationFilterInput {
+  isViewed: BoolFilterInput
+  timestamp: DateFilterInput
+  type: EnumFilterInputNotificationTypeEnum
+}
+
+type NotificationType {
+  body: String!
+  id: Int!
+  isViewed: Boolean!
+  timestamp: DateTime!
+  type: NotificationTypeEnum!
+  workspaceId: Int!
+}
+
+enum NotificationTypeEnum {
+  CUSTOM_POST_TYPE
+}
+
+type PlanFeatureUsageType {
+  feature: String!
+  limit: Int
+  unlimited: Boolean!
+  used: Int
+}
+
+type PlanUsageType {
+  features: [PlanFeatureUsageType]
+  tier: String!
+}
+
+type PostAnalyticsDownloadUrlType {
+  size: Long!
+  url: String!
+}
+
+type PostAnalyticsRawType {
+  accountId: Int!
+  accountName: String!
+  comments: Long
+  customPostId: Long!
+  localPostedDate: DateTime!
+  postedDate: DateTime!
+  reach: Long
+  reactions: Long
+  shares: Long
+  social: SocialEnum!
+  title: String!
+  views: Long
+  workspaceId: Int!
+  workspaceName: String!
+}
+
+type PostAnalyticsType {
+  comments: Long
+  customPostId: Long
+  date: DateTime!
+  reach: Long
+  reactions: Long
+  shares: Long
+  title: String
+  views: Long
+}
+
+enum PostApprovalStatus {
+  APPROVED
+  PENDING
+  REJECTED
+}
+
+type PostApprovalType {
+  createdDate: DateTime!
+  customPostId: Int!
+  id: Int!
+  postCaption: String
+  postThumbnailUrl: String
+  postTitle: String
+  reviewComment: String
+  reviewedDate: DateTime
+  status: PostApprovalStatus
+  submittedByName: String
+  submittedByUserId: ID!
+  workspaceId: Int!
+}
+
+input PostAuthorFilterInput {
+  authorId: StringFilterInput
+  avatarUrl: StringFilterInput
+  description: StringFilterInput
+  followersCount: IntFilterInput
+  followingCount: IntFilterInput
+  id: IntFilterInput
+  isFavorite: BoolFilterInput
+  name: StringFilterInput
+  postCount: IntFilterInput
+  social: EnumFilterInputSocialEnum
+  url: StringFilterInput
+  username: StringFilterInput
+}
+
+type PostAuthorType {
+  authorId: String!
+  avatarUrl: String!
+  description: String!
+  followersCount: Int!
+  followingCount: Int!
+  id: Int!
+  isFavorite: Boolean!
+  name: String!
+  postCount: Int!
+  social: SocialEnum!
+  url: String!
+  username: String!
+}
+
+type PostCommentType {
+  authorAvatarPath: String
+  authorName: String
+  createdDate: DateTime!
+  customPostId: Int!
+  id: Int!
+  text: String!
+  userId: ID!
+  workspaceId: Int!
+}
+
+input PostFilterInput {
+  body: StringFilterInput
+  commentCount: IntFilterInput
+  createdAt: DateFilterInput
+  id: IntFilterInput
+  likeCount: IntFilterInput
+  postId: StringFilterInput
+  rank: IntFilterInput
+  repostCount: IntFilterInput
+  social: EnumFilterInputSocialEnum
+}
+
+enum PostItemAccountAvailabilityStateEnum {
+  INACTIVE
+  SELECTED
+  UNSELECTED
+}
+
+enum PostItemAccountPublicationStateEnum {
+  FAILURE
+  SUCCESS
+  UNDEFINED
+}
+
+type PostMediaType {
+  type: String!
+  url: String!
+}
+
+type PostType {
+  author: PostAuthorType
+  body: String
+  commentCount: Int!
+  createdAt: DateTime!
+  id: Int!
+  keywords: [String]!
+  likeCount: Int!
+  media: [PostMediaType]
+  postId: String!
+  postUrl: String!
+  rank: Int!
+  repostCount: Int!
+  social: SocialEnum!
+}
+
+enum PostingExceptionCodeEnum {
+  ACCOUNT_IS_PAUSED
+  FACEBOOK_ACCOUNT_IS_BLOCKED_OR_DELETED
+  FACEBOOK_SUBJECT_DOES_NOT_HAVE_PERMISSION_TO_POST
+  INSTAGRAM_ACCOUNT_IS_BLOCKED_OR_DELETED
+  INSTAGRAM_NOT_A_BUSINESS_ACCOUNT
+  NO_COMPARABLE_ERROR_TYPE_FOUND
+  X_ACCOUNT_LOCKED
+  X_ACCOUNT_SUSPENDED
+  X_API_CREDITS_EXHAUSTED
+  X_DAILY_POST_LIMIT_REACHED
+  X_PERMISSION_DENIED
+  X_TOKEN_INVALID_OR_EXPIRED
+  X_USER_CREDITS_EXHAUSTED
+}
+
+input PostingGroupFilterInput {
+  workspaceId: IntFilterInput
+}
+
+type PostingGroupType {
+  accounts: [AccountType]
+  id: Int!
+  name: String!
+  workspaceId: Int!
+}
+
+input ProfileSocialInput {
+  count: Int!
+  name: SocialEnum!
+}
+
+type ProfileSocialType {
+  count: Int!
+  name: SocialEnum!
+}
+
+type ProfileType {
+  avatarPath: String
+  id: Int!
+  onboardedDate: DateTime
+  profileSocials: [ProfileSocialType]
+  userId: ID!
+  workspaces: [WorkspaceType]
+}
+
+input PublicAccessTokenInput {
+  token: String!
+  workspaceId: Int!
+}
+
+input RemoveAuthorFromFavoritesInput {
+  authorId: Int!
+  workspaceId: Int!
+}
+
+input ReplyToInboxThreadInput {
+  message: String!
+  threadId: Int!
+}
+
+input ReviewApprovalInput {
+  approvalId: Int!
+  approved: Boolean!
+  comment: String
+}
+
+input SelectAccountsForCalendarViewInput {
+  accountIds: [Int!]!
+  workspaceId: Int!
+}
+
+input SetPrivateApiCredsInput {
+  accountId: Int!
+  nickname: String!
+  password: String!
+}
+
+input SocialAccountFilterInput {
+  authorizationCode: String!
+  social: SocialEnum!
+  userId: String
+  workspaceId: Int!
+}
+
+type SocialAccountType {
+  category: AccountCategoryEnum!
+  description: String
+  id: String!
+  idName: String!
+  logoUrl: String
+  name: String!
+  pageUrl: String!
+}
+
+enum SocialEnum {
+  BLUESKY
+  FACEBOOK
+  GOOGLE_MY_BUSINESS
+  INSTAGRAM
+  LINKED_IN
+  PINTEREST
+  REDDIT
+  TELEGRAM
+  THREADS
+  TIK_TOK
+  TUMBLR
+  TWITCH
+  X
+  YOU_TUBE
+}
+
+input SocialFilterInput {
+  enabled: BoolFilterInput
+  enabledForPost: BoolFilterInput
+  enabledForSearch: BoolFilterInput
+  name: EnumFilterInputSocialEnum
+  title: StringFilterInput
+}
+
+type SocialType {
+  enabled: Boolean!
+  enabledForPost: Boolean!
+  enabledForSearch: Boolean!
+  id: Int!
+  name: SocialEnum!
+  title: String!
+}
+
+enum SortDirectionEnum {
+  ASC
+  DESC
+}
+
+input StringFilterInput {
+  contains: String
+  eq: String
+  in: [String]
+  ne: String
+  notContains: String
+  startsWith: String
+}
+
+input SubmitFeedbackInput {
+  attachmentUrls: [String]
+  description: String
+  pageUrl: String
+  severity: String
+  title: String!
+  type: String!
+  userAgent: String
+  userName: String
+  workspaceId: Int
+}
+
+input SystemSettingFilterInput {
+  social: EnumFilterInputSocialEnum
+}
+
+type SystemSettingType {
+  payload: String!
+  social: SocialEnum!
+}
+
+type TeamNotificationPreferenceType {
+  id: Int!
+  preferences: String
+  userId: ID!
+  workspaceId: Int!
+}
+
+input TextFilterInput {
+  workspaceId: IntFilterInput
+}
+
+type TextType {
+  content: String!
+  id: Int!
+  name: String
+  number: Int!
+  workspaceId: Int!
+}
+
+type TokenType {
+  social: SocialEnum!
+}
+
+input UnselectAccountsForCalendarViewInput {
+  accountIds: [Int!]!
+  workspaceId: Int!
+}
+
+input UpdateAccountInput {
+  accountCategory: AccountCategoryEnum
+  description: String
+  id: Int!
+  logoPath: String
+  name: String
+  url: String
+  userName: String
+}
+
+input UpdateAutomationInput {
+  accountIds: [Int!]!
+  action: AutomationActionEnum!
+  attachLinkToCaption: AutomationAttachLinkToCaptionEnum!
+  backupPostType: CreateCustomPostOption!
+  blackListWords: String
+  customCaption: String!
+  frequency: AutomationFrequencyEnum!
+  id: Int!
+  preferredPostType: CreateCustomPostOption!
+  useCustomCaption: Boolean!
+  whiteListWords: String
+}
+
+input UpdateMemberRoleInput {
+  memberId: Int!
+  role: WorkspaceMemberRole
+}
+
+input UpdatePostingGroupInput {
+  accountIds: [Int!]!
+  id: Int!
+  name: String!
+}
+
+input UpdateTeamNotificationPreferenceInput {
+  preferences: String
+  workspaceId: Int!
+}
+
+input UpdateTextInput {
+  content: String!
+  id: Int!
+  name: String
+}
+
+input UpdateWorkspaceInput {
+  approvalPolicy: WorkspaceApprovalPolicy
+  id: Int!
+  isCurrent: Boolean
+  name: String
+  notes: String
+  timeZone: String
+}
+
+"""A meta type that represents a file upload."""
+scalar Upload
+
+input UpsertWatermarkInput {
+  accountId: Int
+  mediaId: Int!
+  size: Int!
+  transparency: Int!
+  watermarkPosition: WatermarkPositionEnum!
+  workspaceId: Int!
+}
+
+enum WatermarkPositionEnum {
+  BOTTOM_CENTER
+  BOTTOM_LEFT
+  BOTTOM_RIGHT
+  MIDDLE_CENTER
+  MIDDLE_LEFT
+  MIDDLE_RIGHT
+  TOP_CENTER
+  TOP_LEFT
+  TOP_RIGHT
+}
+
+type WatermarkType {
+  accountId: Int
+  media: MediaType
+  mediaId: Int
+  size: Int!
+  transparency: Int!
+  watermarkPosition: WatermarkPositionEnum!
+  workspaceId: Int!
+}
+
+type WorkspaceAccessTokenType {
+  """Token ID"""
+  id: Int!
+}
+
+enum WorkspaceApprovalPolicy {
+  NONE
+  OPTIONAL
+  REQUIRED
+}
+
+input WorkspaceFilterInput {
+  createdDate: DateFilterInput
+  isCurrent: BoolFilterInput
+  name: StringFilterInput
+  notes: StringFilterInput
+  profileId: IntFilterInput
+  timezone: StringFilterInput
+}
+
+enum WorkspaceInviteStatus {
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  PENDING
+  REVOKED
+}
+
+type WorkspaceInviteType {
+  createdDate: DateTime!
+  email: String!
+  expirationDate: DateTime!
+  id: Int!
+  role: WorkspaceMemberRole
+  status: WorkspaceInviteStatus
+  workspaceId: Int!
+}
+
+type WorkspaceKeywordType {
+  frequency: Int!
+  id: Int!
+  name: String!
+}
+
+enum WorkspaceMemberRole {
+  ADMIN
+  EDITOR
+  OWNER
+  VIEWER
+}
+
+type WorkspaceMemberType {
+  createdDate: DateTime!
+  displayName: String
+  email: String
+  id: Int!
+  role: WorkspaceMemberRole
+  userId: ID!
+  workspaceId: Int!
+}
+
+type WorkspaceType {
+  accounts: [AccountType]
+  approvalPolicy: WorkspaceApprovalPolicy
+  createdDate: DateTime!
+  id: Int!
+  isCurrent: Boolean
+  logoPath: String
+  name: String!
+  notes: String
+  profileId: Int
+  timeZone: String
+}
+
+type XCreditBalanceType {
+  monthUsed: Int!
+  monthlyAllowance: Int!
+  purchasedRemaining: Int!
+  totalAvailable: Int!
+  xGrandfathered: Boolean!
+}
