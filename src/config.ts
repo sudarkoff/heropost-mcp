@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import { z } from "zod";
+import { DEFAULT_CREDENTIALS_PATH, readCredentialsSync } from "./auth/credentials.js";
 
 /**
  * Heropost is four separate GraphQL services. The frontend picks between them per
@@ -42,6 +43,11 @@ const envSchema = z.object({
    */
   HEROPOST_ACCESS_TOKEN_FILE: z.string().min(1).optional(),
   HEROPOST_REFRESH_TOKEN_FILE: z.string().min(1).optional(),
+  /**
+   * JSON credential store written by `heropost-mcp auth`. Preferred over everything else:
+   * rotated refresh tokens are persisted here, so sign-in is a one-time event.
+   */
+  HEROPOST_CREDENTIALS_FILE: z.string().min(1).optional(),
   HEROPOST_CLIENT_ID: z.string().min(1).optional(),
   HEROPOST_CLIENT_SECRET: z.string().min(1).optional(),
   HEROPOST_TOKEN_ENDPOINT: z.string().url().optional(),
@@ -65,6 +71,8 @@ export interface Config {
   /** Absolute path to a file containing only the access token. Re-read on demand. */
   accessTokenFile?: string;
   refreshTokenFile?: string;
+  /** Absolute path to the JSON credential store; rotated tokens are written back to it. */
+  credentialsFile?: string;
   clientId: string;
   clientSecret?: string;
   tokenEndpoint: string;
@@ -97,6 +105,21 @@ function withoutBlanks(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
+  return parseConfig(env, { requireCredential: true });
+}
+
+/**
+ * Same configuration, minus the credential requirement — `heropost-mcp auth` runs precisely
+ * when there is no credential yet, and still needs the client id, scopes, and endpoints.
+ */
+export function loadConfigForAuth(env: NodeJS.ProcessEnv = process.env): Config {
+  return parseConfig(env, { requireCredential: false });
+}
+
+function parseConfig(
+  env: NodeJS.ProcessEnv,
+  options: { requireCredential: boolean },
+): Config {
   const parsed = envSchema.safeParse(withoutBlanks(env));
   if (!parsed.success) {
     const detail = parsed.error.issues
@@ -106,17 +129,23 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   }
   const e = parsed.data;
 
+  // The credential store is consulted by default, so a plain `heropost-mcp auth` is enough to
+  // configure the server — no env vars to add afterwards.
+  const credentialsFile = resolve(e.HEROPOST_CREDENTIALS_FILE ?? DEFAULT_CREDENTIALS_PATH);
+  const storedRefreshToken = readCredentialsSync(credentialsFile)?.refreshToken;
+
   const hasCredential =
+    storedRefreshToken ??
     e.HEROPOST_ACCESS_TOKEN ??
     e.HEROPOST_REFRESH_TOKEN ??
     e.HEROPOST_ACCESS_TOKEN_FILE ??
     e.HEROPOST_REFRESH_TOKEN_FILE;
 
-  if (!hasCredential) {
+  if (options.requireCredential && !hasCredential) {
     throw new ConfigError(
-      "No Heropost credential found. Set one of: HEROPOST_ACCESS_TOKEN_FILE (preferred — a " +
-        "chmod-600 file holding an access token copied from a signed-in browser session; " +
-        "re-read on demand so you can replace an expired token without a restart), " +
+      "No Heropost credential found. Run `heropost-mcp auth` once — it signs you in and " +
+        `stores a self-renewing refresh token at ${credentialsFile}, after which this server ` +
+        "needs no further attention. Alternatively set HEROPOST_ACCESS_TOKEN_FILE, " +
         "HEROPOST_ACCESS_TOKEN, HEROPOST_REFRESH_TOKEN_FILE, or HEROPOST_REFRESH_TOKEN. " +
         "See the Authentication section of the README.",
     );
@@ -131,6 +160,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     ...(e.HEROPOST_REFRESH_TOKEN_FILE
       ? { refreshTokenFile: resolve(e.HEROPOST_REFRESH_TOKEN_FILE) }
       : {}),
+    credentialsFile,
     clientId: e.HEROPOST_CLIENT_ID ?? DEFAULT_CLIENT_ID,
     ...(e.HEROPOST_CLIENT_SECRET ? { clientSecret: e.HEROPOST_CLIENT_SECRET } : {}),
     tokenEndpoint: e.HEROPOST_TOKEN_ENDPOINT ?? DEFAULT_TOKEN_ENDPOINT,

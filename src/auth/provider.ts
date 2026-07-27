@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import type { Config } from "../config.js";
 import { HeropostAuthError } from "../errors.js";
+import { readCredentialsSync, updateCredentials } from "./credentials.js";
 
 /**
  * The rest of the server asks for a bearer token and never learns where it came from.
@@ -202,6 +203,13 @@ export class RefreshTokenProvider implements TokenProvider {
 
     this.accessToken = payload.access_token;
     this.expiresAt = Date.now() + (payload.expires_in ?? 3600) * 1000;
+
+    this.onTokensRenewed({
+      accessToken: this.accessToken,
+      refreshToken: this.refreshToken,
+      expiresAt: this.expiresAt,
+    });
+
     return this.accessToken;
   }
 
@@ -212,6 +220,56 @@ export class RefreshTokenProvider implements TokenProvider {
   currentRefreshToken(): string {
     return this.refreshToken;
   }
+
+  /**
+   * Called after every successful renewal so a subclass can persist the rotated token.
+   * Rotation that survives only in memory breaks on the next restart.
+   */
+  protected onTokensRenewed(_tokens: {
+    accessToken: string;
+    refreshToken: string;
+    expiresAt: number;
+  }): void {
+    // Default: nothing to persist.
+  }
+}
+
+/**
+ * A refresh-token provider backed by the credentials file, writing each rotated token back to
+ * disk. This is what makes sign-in a one-time event rather than a recurring chore.
+ */
+export class StoredCredentialsProvider extends RefreshTokenProvider {
+  constructor(
+    config: Pick<Config, "tokenEndpoint" | "clientId" | "clientSecret" | "scopes" | "timeoutMs">,
+    private readonly path: string,
+    refreshToken: string,
+    seedAccessToken?: string,
+  ) {
+    super(config, refreshToken, seedAccessToken);
+  }
+
+  protected override onTokensRenewed(tokens: {
+    accessToken: string;
+    refreshToken: string;
+    expiresAt: number;
+  }): void {
+    // Fire-and-forget: a failed write must not break a call that already has a good token,
+    // but it does need to be visible, since silently losing rotation means a broken restart.
+    void updateCredentials(this.path, {
+      refreshToken: tokens.refreshToken,
+      accessToken: tokens.accessToken,
+      expiresAt: tokens.expiresAt,
+    }).catch((err: unknown) => {
+      process.stderr.write(
+        `heropost-mcp: could not persist the rotated refresh token to ${this.path}: ` +
+          `${err instanceof Error ? err.message : String(err)}\n`,
+      );
+    });
+  }
+
+  override describe(): string {
+    return `stored credentials ${this.path} (refresh token, rotated and persisted automatically)`;
+  }
 }
 
 /**
@@ -219,6 +277,18 @@ export class RefreshTokenProvider implements TokenProvider {
  * can at least pick up a replacement, and a pasted token can do neither.
  */
 export function createTokenProvider(config: Config): TokenProvider {
+  // Stored credentials first: this is the only option that never needs attention again,
+  // because rotated refresh tokens are written back to disk.
+  const stored = config.credentialsFile ? readCredentialsSync(config.credentialsFile) : undefined;
+  if (config.credentialsFile && stored?.refreshToken) {
+    return new StoredCredentialsProvider(
+      config,
+      config.credentialsFile,
+      stored.refreshToken,
+      stored.accessToken,
+    );
+  }
+
   const refreshToken = config.refreshToken ?? readFileSyncTrimmed(config.refreshTokenFile);
   if (refreshToken) {
     return new RefreshTokenProvider(config, refreshToken, config.accessToken);

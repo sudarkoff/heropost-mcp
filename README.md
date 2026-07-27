@@ -84,13 +84,34 @@ Requires Node 20 or newer.
 ## Authentication
 
 Heropost has no API keys. It uses OpenID Connect at `login.heropost.io`, and every request
-carries a bearer access token, which you copy out of a signed-in browser session.
+carries a bearer access token.
 
-> **`heropost-mcp login` does not work, and it isn't your setup.** The identity provider
-> advertises the device-code grant, but the `Heropost.WebFrontend` client is not permitted to
-> use it — tested, and it returns `unauthorized_client`. The command is kept because that
-> could change, and it fails with a clear message rather than a mystery. Until then, the
-> browser-session route below is the only way in.
+**Run this once:**
+
+```bash
+node dist/index.js auth      # or: heropost-mcp auth
+```
+
+It walks you through a one-time authorization-code sign-in and stores a **self-renewing
+refresh token** at `~/.config/heropost/credentials.json` (mode 0600). The server finds that
+file on its own — no environment variables to set — and writes rotated tokens back to it, so
+this should not need repeating.
+
+Why a browser step is involved: Heropost's OIDC client only has *its own* app's redirect URIs
+registered, so the sign-in lands on `app.heropost.io/callback.html?code=…`, and that page's
+JavaScript will spend the authorization code within a fraction of a second. Blocking JavaScript
+for that one host leaves the code in the address bar for you to paste back. The command spells
+this out step by step; it takes about thirty seconds.
+
+> **`heropost-mcp login` (device code) does not work, and it isn't your setup.** The identity
+> provider advertises the grant, but `Heropost.WebFrontend` is not permitted to use it — tested,
+> and it returns `unauthorized_client`. The command is kept in case that changes.
+
+### If you'd rather not do the sign-in
+
+You can paste a short-lived access token instead. Be aware this is the option that needs
+babysitting: tokens last about an hour, and because Heropost keeps them in memory there is no
+refresh token to copy alongside.
 
 ### Getting a token
 
@@ -171,7 +192,9 @@ version control.
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
-| `HEROPOST_ACCESS_TOKEN_FILE` | one of these | Path to a file holding an access token. Re-read on demand. **Preferred.** |
+| — | — | **Nothing, if you ran `heropost-mcp auth`** — the credential store is found automatically. |
+| `HEROPOST_CREDENTIALS_FILE` | no | Override the credential-store path (default `~/.config/heropost/credentials.json`). |
+| `HEROPOST_ACCESS_TOKEN_FILE` | one of these | Path to a file holding an access token. Re-read on demand. |
 | `HEROPOST_REFRESH_TOKEN_FILE` | one of these | Path to a file holding a refresh token. |
 | `HEROPOST_REFRESH_TOKEN` | one of these | Refresh token; access tokens renew automatically. |
 | `HEROPOST_ACCESS_TOKEN` | one of these | A token pasted from a browser session; expires. |
@@ -188,10 +211,11 @@ version control.
 
 ```bash
 claude mcp add heropost \
-  --env HEROPOST_ACCESS_TOKEN_FILE=/Users/you/.config/heropost/access-token \
   --env HEROPOST_WORKSPACE_ID=123 \
   -- node /absolute/path/to/heropost-mcp/dist/index.js
 ```
+
+No credential env var is needed once you've run `heropost-mcp auth`.
 
 ### Claude Desktop
 
@@ -204,7 +228,6 @@ In `claude_desktop_config.json`:
       "command": "node",
       "args": ["/absolute/path/to/heropost-mcp/dist/index.js"],
       "env": {
-        "HEROPOST_ACCESS_TOKEN_FILE": "/Users/you/.config/heropost/access-token",
         "HEROPOST_WORKSPACE_ID": "123"
       }
     }

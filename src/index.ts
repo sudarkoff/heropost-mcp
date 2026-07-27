@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { runAuthCommand } from "./auth/command.js";
 import { deviceLogin } from "./auth/device.js";
 import { createTokenProvider } from "./auth/provider.js";
 import { ConfigError } from "./config.js";
@@ -14,6 +15,11 @@ async function main(): Promise<void> {
   }
   if (argv.includes("--help") || argv.includes("-h")) {
     process.stdout.write(USAGE);
+    return;
+  }
+
+  if (argv[0] === "auth") {
+    await runAuthCommand(argv.slice(1));
     return;
   }
 
@@ -48,15 +54,19 @@ const USAGE = `${SERVER_NAME} ${SERVER_VERSION} — unofficial MCP server for He
 
 Usage:
   heropost-mcp                 Run the MCP server over stdio (how MCP clients start it).
-  heropost-mcp login           Device-code sign-in. Heropost does not currently permit this
-                               grant, so expect unauthorized_client; use a token instead.
+  heropost-mcp auth            One-time sign-in. Stores a self-renewing refresh token, so
+                               this is the way to avoid re-pasting tokens every hour.
+  heropost-mcp login           Device-code sign-in. Heropost does not permit this grant for
+                               their client, so expect unauthorized_client. Kept in case
+                               that changes.
   heropost-mcp --version
   heropost-mcp --help
 
-Authentication (set one):
-  HEROPOST_ACCESS_TOKEN_FILE   Preferred — a chmod-600 file holding an access token, re-read
-                               on demand so you can replace an expired one without a restart.
-  HEROPOST_REFRESH_TOKEN_FILE  Same, for a refresh token (renews on its own).
+Authentication — run "heropost-mcp auth" once and you can ignore all of these:
+  HEROPOST_CREDENTIALS_FILE    Credential store written by "auth". Defaults to
+                               ~/.config/heropost/credentials.json and is used automatically.
+  HEROPOST_ACCESS_TOKEN_FILE   A chmod-600 file holding an access token, re-read on demand.
+  HEROPOST_REFRESH_TOKEN_FILE  Same, for a refresh token.
   HEROPOST_REFRESH_TOKEN       Refresh token as an environment variable.
   HEROPOST_ACCESS_TOKEN        Access token as an environment variable; expires hourly.
 
