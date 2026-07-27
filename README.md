@@ -56,6 +56,20 @@ Publishing to social media is public and irreversible, so:
 - Tools whose effects are public say so in their descriptions and are flagged with MCP's
   `destructiveHint`.
 
+Two hardening measures worth understanding, because both defend against *instructions the
+model picked up from content it read* rather than against you:
+
+- **`HEROPOST_MEDIA_ROOT` confines uploads.** `upload_post_media` reads a local file and sends
+  it to Heropost, where it can end up on a public timeline — so an unrestricted path is an
+  exfiltration route for anything image-shaped on disk (a screenshot of a password manager is
+  a `.png` like any other). Set this to your media folder. Symlinks are resolved before the
+  check, so a link inside the root cannot point outside it.
+- **`advancedInput` cannot subvert a write.** The escape hatch below is for supplying fields
+  this server hasn't modeled. It is rejected if it tries to set `workspaceId`,
+  `customPostId`, `accountIds`, `postStatus`, or anything resembling a publish flag, and it
+  can never override an argument you passed explicitly. Otherwise it would be a way to
+  retarget a post to another workspace, or to flip a draft into something that publishes.
+
 ## Install
 
 ```bash
@@ -120,6 +134,7 @@ including billing. Keep them out of shell history and version control.
 | `HEROPOST_ACCESS_TOKEN` | one of these | A token pasted from a browser session; expires. |
 | `HEROPOST_WORKSPACE_ID` | no | Default workspace, so tools don't need it every call. |
 | `HEROPOST_READ_ONLY` | no | `1` withholds every write tool. |
+| `HEROPOST_MEDIA_ROOT` | no | Confine media uploads to this directory tree. Recommended — see below. |
 | `HEROPOST_TIMEOUT_MS` | no | Per-request timeout; defaults to `30000`. |
 | `HEROPOST_CLIENT_ID` | no | OIDC client id; defaults to the web app's. |
 | `HEROPOST_MAIN_URL` etc. | no | Override a service endpoint (`MAIN`, `POSTING`, `LOGIN`, `NOTIFICATION`). |

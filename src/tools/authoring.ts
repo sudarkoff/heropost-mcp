@@ -15,6 +15,7 @@ import {
 import {
   defineTool,
   isoDateSchema,
+  sanitizeAdvancedInput,
   socialSchema,
   type AnyToolDef,
 } from "./common.js";
@@ -32,7 +33,9 @@ const advancedInputSchema = z
   .optional()
   .describe(
     "Escape hatch: extra fields merged into the GraphQL input, for fields not yet modeled " +
-      "here. Only needed if Heropost rejects a call for a missing field.",
+      "here. Only needed if Heropost rejects a call for a missing field. Cannot set " +
+      "workspaceId, customPostId, accountIds, postStatus, or any publish flag — use the " +
+      "tool's own arguments for those.",
   );
 
 /** Reads a post back through the schema-verified `main` service. */
@@ -86,10 +89,11 @@ const createPost = defineTool({
       ...CREATE_CUSTOM_POST,
       variables: {
         customPost: {
+          // advancedInput goes first so the vetted arguments always win.
+          ...sanitizeAdvancedInput(args.advancedInput),
           workspaceId,
           ...(args.title ? { title: args.title } : {}),
           text: args.text,
-          ...(args.advancedInput ?? {}),
         },
       },
     });
@@ -151,15 +155,16 @@ const updatePost = defineTool({
   },
   async handler(args, { client }) {
     const { postId, advancedInput, ...fields } = args;
+    const extra = sanitizeAdvancedInput(advancedInput);
     const changes = Object.fromEntries(
       Object.entries(fields).filter(([, v]) => v !== undefined),
     );
-    if (Object.keys(changes).length === 0 && !advancedInput) {
+    if (Object.keys(changes).length === 0 && Object.keys(extra).length === 0) {
       throw new Error("Nothing to update — pass at least one field to change.");
     }
     await client.request<IdResult>({
       ...UPDATE_CUSTOM_POST,
-      variables: { customPost: { customPostId: postId, ...changes, ...(advancedInput ?? {}) } },
+      variables: { customPost: { ...extra, customPostId: postId, ...changes } },
     });
     return jsonResult({ updated: true, postId, post: await readBack(client, postId) });
   },
@@ -216,7 +221,7 @@ const unschedulePost = defineTool({
     await client.request<IdResult>({
       ...SET_SCHEDULED_POST_TO_DRAFT,
       variables: {
-        customPost: { customPostId: args.postId, ...(args.advancedInput ?? {}) },
+        customPost: { ...sanitizeAdvancedInput(args.advancedInput), customPostId: args.postId },
       },
     });
     return jsonResult({
@@ -273,11 +278,11 @@ const uploadPostMedia = defineTool({
       ...UPLOAD_POST_MEDIA,
       variables: {
         customPost: {
+          ...sanitizeAdvancedInput(args.advancedInput),
           customPostId: args.postId,
           mediaId: media.mediaId,
           url: media.url,
           mediaType: media.mediaType,
-          ...(args.advancedInput ?? {}),
         },
       },
     });

@@ -95,6 +95,54 @@ export const isoDateSchema = z
     "Expected an ISO-8601 date (2026-07-26) or timestamp (2026-07-26T09:00:00Z).",
   );
 
+/**
+ * Fields `advancedInput` must never set. The escape hatch exists to supply fields we haven't
+ * modeled — not to rewrite the ones that decide *which* record is touched or *whether it
+ * publishes*. Without this, a prompt-injected `advancedInput` could retarget a write to
+ * another workspace or flip a draft into something that goes out, which would quietly defeat
+ * the guarantees the tool descriptions make.
+ */
+const PROTECTED_INPUT_KEYS = [
+  "workspaceid",
+  "custompostid",
+  "custompostitemid",
+  "accountids",
+  "accountid",
+  "poststatus",
+  "status",
+  "mediaid",
+] as const;
+
+/** Anything that looks like it triggers publication, whatever it ends up being called. */
+const PUBLISH_LIKE = /publish|postnow|sendnow/i;
+
+export class ProtectedFieldError extends Error {
+  override readonly name = "ProtectedFieldError";
+}
+
+/**
+ * Validate an `advancedInput` payload. Rejects loudly rather than dropping keys silently, so
+ * a caller learns the field is off-limits instead of wondering why it had no effect.
+ */
+export function sanitizeAdvancedInput(
+  input: Record<string, unknown> | undefined,
+): Record<string, unknown> {
+  if (!input) return {};
+  const rejected = Object.keys(input).filter(
+    (key) =>
+      (PROTECTED_INPUT_KEYS as readonly string[]).includes(key.toLowerCase()) ||
+      PUBLISH_LIKE.test(key),
+  );
+  if (rejected.length > 0) {
+    throw new ProtectedFieldError(
+      `advancedInput may not set ${rejected.join(", ")}. These fields determine which record ` +
+        `is modified and whether it publishes, so they are only settable through the tool's ` +
+        `own documented arguments.`,
+    );
+  }
+  return { ...input };
+}
+
 /** Build a Heropost DateFilterInput from an optional from/to pair. */
 export function dateRangeFilter(
   from?: string,

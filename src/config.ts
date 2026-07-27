@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import { z } from "zod";
 
 /**
@@ -46,6 +47,8 @@ const envSchema = z.object({
   HEROPOST_WORKSPACE_ID: z.coerce.number().int().positive().optional(),
   HEROPOST_READ_ONLY: boolish.optional(),
   HEROPOST_TIMEOUT_MS: z.coerce.number().int().positive().optional(),
+  /** Confines media uploads to one directory tree. See `mediaRoot` below. */
+  HEROPOST_MEDIA_ROOT: z.string().min(1).optional(),
 });
 
 export interface Config {
@@ -60,6 +63,12 @@ export interface Config {
   defaultWorkspaceId?: number;
   readOnly: boolean;
   timeoutMs: number;
+  /**
+   * If set, media uploads are restricted to files under this directory. Worth setting:
+   * uploaded bytes go to a third party and can end up on a public timeline, so an
+   * unrestricted file path is an exfiltration route for anything image-shaped on disk.
+   */
+  mediaRoot?: string;
 }
 
 export class ConfigError extends Error {
@@ -111,5 +120,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     ...(e.HEROPOST_WORKSPACE_ID ? { defaultWorkspaceId: e.HEROPOST_WORKSPACE_ID } : {}),
     readOnly: e.HEROPOST_READ_ONLY ?? false,
     timeoutMs: e.HEROPOST_TIMEOUT_MS ?? 30_000,
+    ...(e.HEROPOST_MEDIA_ROOT ? { mediaRoot: resolve(e.HEROPOST_MEDIA_ROOT) } : {}),
   };
 }

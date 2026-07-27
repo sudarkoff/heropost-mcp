@@ -135,4 +135,9 @@ export class HeropostClient {
   get readOnly(): boolean {
     return this.config.readOnly;
   }
+
+  /** Directory that media uploads are confined to, if configured. */
+  get mediaRoot(): string | undefined {
+    return this.config.mediaRoot;
+  }
 }
