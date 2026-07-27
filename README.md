@@ -212,10 +212,18 @@ version control.
 ```bash
 claude mcp add heropost \
   --env HEROPOST_WORKSPACE_ID=123 \
-  -- node /absolute/path/to/heropost-mcp/dist/index.js
+  -- "$(which node)" /absolute/path/to/heropost-mcp/dist/index.js
 ```
 
 No credential env var is needed once you've run `heropost-mcp auth`.
+
+> **Use an absolute path to `node`, not bare `node`.** MCP servers are spawned as child
+> processes, and that environment does not necessarily include the `PATH` your shell profile
+> builds. If Node came from Homebrew (`/opt/homebrew/bin/node` on Apple Silicon, `/usr/local/bin`
+> on Intel) or a version manager like nvm/fnm/asdf, a session started outside a login shell
+> cannot find bare `node` — the server never starts and the tools simply appear "not available",
+> with no obvious error. `$(which node)` avoids this. The same applies to the Claude Desktop
+> config below. If you later switch Node versions, re-run this with the new path.
 
 ### Claude Desktop
 
@@ -225,7 +233,7 @@ In `claude_desktop_config.json`:
 {
   "mcpServers": {
     "heropost": {
-      "command": "node",
+      "command": "/opt/homebrew/bin/node",
       "args": ["/absolute/path/to/heropost-mcp/dist/index.js"],
       "env": {
         "HEROPOST_WORKSPACE_ID": "123"
@@ -237,6 +245,20 @@ In `claude_desktop_config.json`:
 
 Then try: *"What's scheduled in Heropost next week?"* or *"Which LinkedIn post got the most
 engagement last month?"*
+
+### If the tools don't show up
+
+1. **Restart the session.** MCP configuration is read at startup, so a session that was already
+   open when you registered the server will not see it.
+2. **Check it actually starts**, with the same command your client uses:
+   ```bash
+   env -i HOME="$HOME" PATH=/usr/bin:/bin "$(which node)" /absolute/path/to/heropost-mcp/dist/index.js < /dev/null
+   ```
+   A healthy server prints a one-line `ready` banner to stderr. `env: node: No such file or
+   directory` means you used bare `node` — see the `PATH` note above. A credential error means
+   `heropost-mcp auth` hasn't been run.
+3. **Rebuild after pulling.** `dist/` is not committed, so `npm run build` is required after a
+   `git pull`, and the path you registered must still exist.
 
 To run it without any ability to change anything, add `"HEROPOST_READ_ONLY": "1"`.
 
