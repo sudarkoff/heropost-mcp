@@ -50,10 +50,21 @@ OpenID Connect (OpenIddict), discovery at
   `/connect/revocation`, `/connect/introspect`, and `/connect/deviceauthorization`.
 - **Advertised grants:** `authorization_code`, `client_credentials`, `refresh_token`,
   `implicit`, `password`, `urn:ietf:params:oauth:grant-type:device_code`.
-- **Token storage in the browser:** `oidc-client-ts` `WebStorageStateStore`, under the
-  localStorage key `oidc.user:https://login.heropost.io:Heropost.WebFrontend`. Its JSON
-  value holds `access_token` and `refresh_token`. This is how you extract a credential by
-  hand.
+- **Token storage in the browser: in memory only.** The bundle configures an `oidc-client-ts`
+  `WebStorageStateStore`, which led to an initial guess that tokens sit in localStorage under
+  `oidc.user:https://login.heropost.io:Heropost.WebFrontend`. **That guess was wrong** — tested
+  against a signed-in session, neither localStorage nor sessionStorage contains any `oidc.*`
+  entry. The only app-owned web-storage keys are `heropost-local-notifications-<userId>`,
+  `lastExternalReferrer`, `lastExternalReferrerTime`, `ingest_guid`, plus a Help Scout beacon
+  key and `ingestSessionId`. So the store is backed by in-memory storage, which is the
+  XSS-resistant configuration.
+
+  **Consequence for anyone building on this:** you cannot extract a credential from disk. The
+  only way to obtain a token is to read the `Authorization` header off a request in flight
+  (Network tab, or by patching `window.fetch` — see the README). There is likewise **no
+  refresh token to copy**, which is why `HEROPOST_ACCESS_TOKEN_FILE` — re-read on demand —
+  matters more than it otherwise would: an hourly re-capture into one file is the practical
+  workflow.
 
 ### Unverified, and worth knowing
 

@@ -125,11 +125,27 @@ describe("FileTokenProvider", () => {
     await expect(provider.getAccessToken()).rejects.toThrow(/is empty/);
   });
 
-  it("catches the mistake of pasting the whole localStorage JSON", async () => {
+  it("catches the mistake of pasting a whole JSON object", async () => {
     // Easy error to make, and the resulting auth failure would be baffling otherwise.
     const provider = new FileTokenProvider(
       await tokenFile('{"access_token": "abc", "refresh_token": "def"}'),
     );
-    await expect(provider.getAccessToken()).rejects.toThrow(/contains whitespace/);
+    await expect(provider.getAccessToken()).rejects.toThrow(/only the token itself/);
+  });
+
+  it("strips a leading Bearer, since that is how the header is copied", async () => {
+    // The documented way to get a token is to copy an Authorization header, so the prefix
+    // tags along constantly. Silently accepting it beats a confusing auth failure.
+    await expect(new FileTokenProvider(await tokenFile("Bearer abc123")).getAccessToken())
+      .resolves.toBe("abc123");
+    await expect(new FileTokenProvider(await tokenFile("bearer   abc123\n")).getAccessToken())
+      .resolves.toBe("abc123");
+  });
+
+  it("still rejects a full curl command rather than guessing", async () => {
+    const provider = new FileTokenProvider(
+      await tokenFile("curl -H 'authorization: Bearer abc' https://api.heropost.io/graphql"),
+    );
+    await expect(provider.getAccessToken()).rejects.toThrow(/only the token itself/);
   });
 });

@@ -94,14 +94,42 @@ carries a bearer access token, which you copy out of a signed-in browser session
 
 ### Getting a token
 
-1. Open [app.heropost.io](https://app.heropost.io) and sign in.
-2. DevTools → Application → Local Storage → `https://app.heropost.io`.
-3. Find the key `oidc.user:https://login.heropost.io:Heropost.WebFrontend`.
-4. Its value is JSON. Copy the value of `access_token` — **just that string**, not the
-   surrounding JSON.
+Heropost keeps its OIDC tokens in an **in-memory** store — there is nothing in localStorage or
+sessionStorage to copy (verified: a signed-in session has no `oidc.user:…` entry in either).
+That's a deliberate, XSS-resistant choice on their part, and it means the only place to see a
+token is on a request in flight.
 
-Access tokens expire within about an hour. The `refresh_token` in that same JSON blob lasts
-longer; if you use it, the server renews access tokens on its own.
+1. Open [app.heropost.io](https://app.heropost.io) and sign in.
+2. Open DevTools → **Network**, and filter for `graphql`.
+3. Click around the app — the calendar or Insights — so it issues a request.
+4. Select any `graphql` request → **Headers** → **Request Headers** → `authorization`.
+5. Copy everything **after** `Bearer ` — just the token.
+
+Or, from the console, capture it off the next request automatically:
+
+```js
+(() => {
+  const orig = window.fetch;
+  window.fetch = async (...args) => {
+    try {
+      const src = args[0] instanceof Request ? args[0].headers : args[1]?.headers;
+      const a = new Headers(src || {}).get('authorization');
+      if (a?.startsWith('Bearer ')) {
+        copy(a.slice(7));
+        console.log(`copied token (${a.length - 7} chars)`);
+        window.fetch = orig;
+      }
+    } catch {}
+    return orig(...args);
+  };
+  return 'patched — now click something in the app';
+})()
+```
+
+**Access tokens expire in about an hour**, and because the tokens live only in memory there is
+no refresh token to copy either. In practice that makes `HEROPOST_ACCESS_TOKEN_FILE` the
+option worth using: when a call starts failing, repeat the capture above and overwrite that one
+file — the running server picks it up on the next call, with no restart and no config change.
 
 ### Option 1: a token file (recommended)
 
@@ -126,10 +154,14 @@ restart, no config edit.
 Fine for a quick trial:
 
 ```bash
-HEROPOST_ACCESS_TOKEN=<the access_token string>
-# or, longer-lived:
-HEROPOST_REFRESH_TOKEN=<the refresh_token string>
+HEROPOST_ACCESS_TOKEN=<the token>
 ```
+
+`HEROPOST_REFRESH_TOKEN` / `HEROPOST_REFRESH_TOKEN_FILE` are supported and will renew access
+tokens on their own — but since Heropost holds tokens only in memory, there is no refresh token
+to copy out of the browser. They're there for the day a proper token exchange becomes possible.
+
+A leading `Bearer ` is stripped for you, so pasting the header value as-is is fine.
 
 **Treat both tokens as passwords.** They grant full access to your Heropost account —
 including billing, which lives behind the same login. Keep them out of shell history and

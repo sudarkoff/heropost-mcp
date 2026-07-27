@@ -71,7 +71,9 @@ export class FileTokenProvider implements TokenProvider {
     }
 
     // Tolerate a trailing newline and stray whitespace from an editor or a shell redirect.
-    const token = contents.trim();
+    // Also strip a leading "Bearer ", since the documented way to obtain a token is to copy
+    // an Authorization header off a live request and the prefix comes along easily.
+    const token = contents.trim().replace(/^Bearer\s+/i, "").trim();
     if (!token) {
       throw new HeropostAuthError(
         `The Heropost token file at ${this.path} is empty. Paste an access token into it — ` +
@@ -81,8 +83,9 @@ export class FileTokenProvider implements TokenProvider {
     if (/\s/.test(token)) {
       throw new HeropostAuthError(
         `The Heropost token file at ${this.path} contains whitespace, so it does not look ` +
-          `like a bare token. It should hold only the access token — not the surrounding ` +
-          `JSON from localStorage.`,
+          `like a bare token. It should hold only the token itself — not a whole ` +
+          `Authorization header, JSON object, or curl command. Copy just the value after ` +
+          `"Bearer " from a graphql request in the Network tab.`,
       );
     }
 
